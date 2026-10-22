@@ -1,0 +1,22 @@
+{
+  "name": "manga-generator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node workflow.mjs build && node export.mjs current",
+    "check": "node workflow.mjs check && node verify-general.mjs && node verify-archive.mjs && node verify-face.mjs && node verify-auto.mjs && node verify-state-history.mjs",
+    "prompts": "node manga.mjs prompts",
+    "export": "node export.mjs",
+    "workflow:plan": "node workflow.mjs plan && node export.mjs storyboards",
+    "workflow:status": "node workflow.mjs status",
+    "workflow:build": "node workflow.mjs build && node export.mjs current",
+    "reproduce": "node reproduce.mjs",
+    "workflow:freeze": "node reproduce.mjs freeze",
+    "workflow:bundle": "node reproduce.mjs bundle",
+    "work:new": "node new-work.mjs",
+    "workflow:layers": "node workflow.mjs layers",
+    "auto": "node auto.mjs",
+    "pdf": "node pdf.mjs"
+  },
+  "license": "MIT"
+}

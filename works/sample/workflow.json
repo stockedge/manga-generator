@@ -1,0 +1,118 @@
+{
+  "version": 6,
+  "title": "別作品の雛形",
+  "author": "",
+  "sourceFile": "works/sample/source/original.txt",
+  "style": "Monochrome hand-inked manga, varied line weight, restrained expression, sparse backgrounds, no photorealism or surface microtexture.",
+  "cast": {
+    "a": {
+      "name": "人物A",
+      "description": "原作に合わせて外見と衣服を確定する"
+    },
+    "b": {
+      "name": "人物B",
+      "description": "人物Aと区別できるシルエットにする"
+    },
+    "narration": {
+      "kind": "caption",
+      "name": "地の文"
+    }
+  },
+  "references": [
+    "works/sample/assets/characters.png"
+  ],
+  "assetDir": "works/sample/assets",
+  "workflowDir": "works/sample/workflow",
+  "outputDir": "works/sample/output",
+  "pages": [
+    {
+      "id": "01",
+      "purpose": "原作から漫画脚本を作成し、この雛形を置き換える",
+      "expectation": "誰が何を望み、何が起こるか",
+      "panels": [
+        {
+          "id": "01-1",
+          "order": 1,
+          "role": "提示",
+          "beat": "状況",
+          "rect": [
+            24,
+            24,
+            976,
+            650
+          ],
+          "scene": "原作に合わせて場面を指定する",
+          "speakers": {
+            "a": {
+              "anchor": [
+                350,
+                360
+              ],
+              "face": [
+                290,
+                260,
+                120,
+                160
+              ]
+            }
+          },
+          "dialogue": [
+            {
+              "speaker": "a",
+              "text": "セリフを確定する。",
+              "side": "right"
+            }
+          ]
+        },
+        {
+          "id": "01-2",
+          "order": 2,
+          "role": "反応",
+          "beat": "反応",
+          "rect": [
+            24,
+            698,
+            976,
+            650
+          ],
+          "scene": "相手の反応を描く",
+          "speakers": {
+            "b": {
+              "anchor": [
+                350,
+                1034
+              ],
+              "face": [
+                290,
+                934,
+                120,
+                160
+              ]
+            }
+          },
+          "dialogue": [
+            {
+              "speaker": "b",
+              "text": "相手の返答を確定する。",
+              "side": "right"
+            }
+          ]
+        }
+      ],
+      "section": "opening"
+    }
+  ],
+  "renderMode": "panels",
+  "sections": {
+    "opening": {
+      "summary": "場面の状況を原作から確定する",
+      "location": "舞台を確定する",
+      "costumes": {
+        "a": "衣装を確定する",
+        "b": "衣装を確定する"
+      },
+      "objects": {}
+    }
+  },
+  "assetSources": {}
+}

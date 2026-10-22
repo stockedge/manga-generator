@@ -1,0 +1,43 @@
+# Runtime and local configuration
+node_modules/
+tmp/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.codegraph/
+
+# Local productions, source material, generated assets and archives
+/works/*
+!/works/sample/
+/works/sample/*
+!/works/sample/workflow.json
+!/works/sample/source/
+/works/sample/source/*
+!/works/sample/source/original.txt
+/collections/
+/releases/
+/.manga-history/
+/assets/
+/source/
+/prompts/
+/output/
+/output-*/
+/kensei-old-output/
+/workflow/
+/workflow-*/
+/workflow.json
+/workflow-v*.json
+/workflow.lock.json
+/story.json
+/promotion/
+
+# Private experiments, research and handoff notes
+/research/
+/qwen-pod/
+/mosaic.py
+/docs/OPEN-WEIGHTS.md
+/docs/research/
+/docs/_*.json
+/HANDOFF-*.md
