@@ -49,24 +49,10 @@ For manual production steps and developer command specifications, see the follow
 - [Automatic production from source text](docs/AUTOMATIC.md)
 - [Repository layout for developers](docs/PROJECT-LAYOUT.md)
 
-## Development checks
+## Claude Code
 
-Run `npm ci` with Node.js 24 to install ESLint, Prettier, and TypeScript for development. The production CLI itself continues to use only the Node.js standard library.
-
-- `npm run lint`: Run static checks on shared code, CLI code, and tests.
-- `npm run format`: Format `.mjs` files and development configuration in the same scope.
-- `npm run format:check`: Check formatting.
-- `npm run typecheck`: Check types with TypeScript's `checkJs` without converting the `.mjs` files.
-- `npm run check:code`: Run lint, formatting checks, and type checks together.
-
-Type checking uses `strict: false` as part of a gradual rollout to existing JavaScript. Work data loaded from JSON does not yet have detailed types, so work configuration and artwork are checked through the existing production checks. Work data, generated files, history, and finalized packages are excluded from formatting.
-
-After changing shared code, also explicitly set `MANGA_PROJECT` and run `npm run check`. Use `node tests/verify-workflow.mjs` to verify reconstruction of a completed work. Formatting also changes code hashes: preserve existing reproducibility locks and finalized packages, and freeze a new revision only after completing the required verification.
+See [Claude Code setup](docs/CLAUDE-CODE.md) and [ComfyUI provisioning](docs/COMFYUI.md) (Japanese). Claude Code orchestrates and reviews; external ComfyUI generates images. Composition, PDF, history and completion checks use the shared CLI. A separate GPU environment is required.
 
 ## License
 
 Source code and documentation are provided under the [MIT License](LICENSE). Source stories and reference materials supplied by users, external models, and generated outputs remain subject to their respective rights and terms of use.
-
-## Claude Code
-
-See [Claude Code setup](docs/CLAUDE-CODE.md) and [ComfyUI provisioning](docs/COMFYUI.md) (Japanese). Claude Code orchestrates and reviews; external ComfyUI generates images. Composition, PDF, history and completion checks use the shared CLI. A separate GPU environment is required.

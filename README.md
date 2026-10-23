@@ -43,32 +43,16 @@
 
 ## 詳細ドキュメント
 
-制作途中の作品については `node cli/production-audit.mjs work works/<作品ID>/workflow.json` で、描く動作・左右の手・小道具と吹き出しの事前警告、保存済み素材数、空き容量を確認できます。コレクションは `node cli/production-audit.mjs collection isseimori`。表示される素材・レビュー記録の数は完成作品数ではありません。
-
 手動での制作手順や開発者向けのコマンド仕様は、以下の資料を参照してください。
 
 - [手動制作・再現のコマンド詳細](REPRODUCE.md)
 - [原作からの自動制作手順](docs/AUTOMATIC.md)
 - [開発者向けフォルダー構成](docs/PROJECT-LAYOUT.md)
 
-## 開発時のコード検査
+## Claude Codeで使う
 
-Node.js 24で `npm ci` を実行すると、開発用のESLint・Prettier・TypeScriptを導入できます。制作CLI自体は引き続きNode.js標準ライブラリで動作します。
-
-- `npm run lint`：共通処理・CLI・テストの静的検査。
-- `npm run format`：同じ範囲の `.mjs` と開発設定を整形。
-- `npm run format:check`：整形済みか確認。
-- `npm run typecheck`：`.mjs` を変換せず、TypeScriptの `checkJs` で型検査。
-- `npm run check:code`：lint・整形確認・型検査をまとめて実行。
-
-型検査は既存JavaScriptへの段階導入として `strict: false` です。JSON由来の作品データにはまだ詳細な型がないため、作品設定や画像の検品は既存の制作検査で行います。作品データ・生成物・履歴・確定パッケージは整形対象外です。
-
-共通処理を変更したら、上記に加えて `MANGA_PROJECT` を明示し `npm run check` を実行してください。完成作品の再構築検証には `node tests/verify-workflow.mjs` を使います。整形もコードのハッシュを変えるため、既存の再現ロックと確定パッケージはそのまま保存し、改訂版は正式な検証後に新しく固定してください。
+[Claude Code向け導入・制作手順](docs/CLAUDE-CODE.md)と[ComfyUI構築手順](docs/COMFYUI.md)を用意しています。画像生成は外部ComfyUI、視覚確認と独立レビューはClaude Code、組版・PDF・履歴・再現は共通CLIが担当します。GPU環境は別途必要です。
 
 ## ライセンス
 
 ソースコードとドキュメントは [MIT License](LICENSE) で提供します。利用者が用意する原作や参照素材、外部モデル、生成物にはそれぞれの権利と利用条件が適用されます。
-
-## Claude Codeで使う
-
-[Claude Code向け導入・制作手順](docs/CLAUDE-CODE.md)と[ComfyUI構築手順](docs/COMFYUI.md)を用意しています。画像生成は外部ComfyUI、視覚確認と独立レビューはClaude Code、組版・PDF・履歴・再現は共通CLIが担当します。GPU環境は別途必要です。
