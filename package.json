@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node cli/workflow.mjs build && node cli/export.mjs current",
-    "check": "node cli/workflow.mjs check && node tests/verify-general.mjs && node tests/verify-archive.mjs && node tests/verify-face.mjs && node tests/verify-auto.mjs && node tests/verify-state-history.mjs && node tests/verify-layout.mjs",
+    "check": "node cli/workflow.mjs check && node tests/verify-general.mjs && node tests/verify-archive.mjs && node tests/verify-face.mjs && node tests/verify-auto.mjs && node tests/verify-state-history.mjs && node tests/verify-layout.mjs && node tests/verify-prompts.mjs && node tests/verify-refactor.mjs && node tests/verify-production-preflight.mjs",
     "prompts": "node cli/manga.mjs prompts",
     "export": "node cli/export.mjs",
     "workflow:plan": "node cli/workflow.mjs plan && node cli/export.mjs storyboards",
@@ -16,7 +16,20 @@
     "work:new": "node cli/new-work.mjs",
     "workflow:layers": "node cli/workflow.mjs layers",
     "auto": "node cli/auto.mjs",
-    "pdf": "node cli/pdf.mjs"
+    "pdf": "node cli/pdf.mjs",
+    "lint": "eslint cli src tests eslint.config.mjs",
+    "format": "prettier --write \"{cli,src,tests}/**/*.mjs\" eslint.config.mjs package.json package-lock.json tsconfig.json .prettierrc.json",
+    "format:check": "prettier --check \"{cli,src,tests}/**/*.mjs\" eslint.config.mjs package.json package-lock.json tsconfig.json .prettierrc.json",
+    "typecheck": "tsc --project tsconfig.json",
+    "check:code": "npm run lint && npm run format:check && npm run typecheck"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "typescript": "7.0.2"
+  }
 }

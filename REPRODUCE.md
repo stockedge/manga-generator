@@ -1,5 +1,9 @@
 # 汎用の漫画制作ワークフロー（第8版）
 
+作画前の共通監査は `node cli/production-audit.mjs work works/my-story/workflow.json`、コレクション進捗は `node cli/production-audit.mjs collection isseimori`。新規作品は `productionPreflight.required` により、各コマの瞬間・前後、可視人物の左右の手、重要小道具の前・現在・後を `panel.production` へ記録する。監査は文字予約面積と予定顔高も警告する。警告を直してから `generation prepare` へ進む。監査の数値だけでは自然な読順や小道具の物理的整合性を保証しないため、番号なしネームと前後コマを実読する。局所修正計画が同じ構図で3回に達したら、構図または文字組へ戻す。`auto status` の素材数・容量概算は完成判定と区別する。
+
+新規作品の生成指示と、画像だけの初読を保存してから照合する手順は [生成指示と読順レビュー](docs/PROMPTS.md) を参照。既存作品の指示・採用・レビューは自動移行しない。
+
 メモなどを横書きで引用する場合は、セリフへ `textDirection: "horizontal"` と `textColumns: ["一行目", "二行目"]` を指定する。配列は表示行の順番で、結合した内容は改行を除いた `text` と完全一致する必要がある。省略時または `vertical` は従来の縦書き。横書きも顔・手・小道具・尾・読順の検査対象で、文字を変えずに向きを変更した場合も `plan`、ネーム、採用・合成・独立レビューを更新する。
 
 scriptの合格には全コマの `dialogueReview` が必要です。原作の問い返答や指示対象を復元してからネームと画像編集へ進みます。OCRの一致は脚本の自然さの証明ではありません。詳細は[工程レビュー](docs/REVISION-AND-REVIEWS.md)を参照してください。

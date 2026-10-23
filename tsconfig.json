@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "strict": false,
+    "noEmit": true,
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "lib": ["ES2023", "DOM"],
+    "skipLibCheck": true
+  },
+  "include": ["cli/**/*.mjs", "src/**/*.mjs", "tests/**/*.mjs"]
+}

@@ -1,0 +1,12 @@
+**/*
+!cli/
+!src/
+!tests/
+!cli/**/*.mjs
+!src/**/*.mjs
+!tests/**/*.mjs
+!eslint.config.mjs
+!package.json
+!package-lock.json
+!tsconfig.json
+!.prettierrc.json
