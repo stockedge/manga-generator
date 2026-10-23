@@ -1,6 +1,6 @@
 # 複数作品対応の漫画制作（第5版）
 
-原作・登場人物・絵柄・素材・出力を作品単位で分離しました。最新の使い方と確認手順は [REPRODUCE.md](../REPRODUCE.md)。既存作品は [works/kensei/output/reader.html](../works/kensei/output/reader.html)。別作品の雛形は [works/sample/workflow.json](../works/sample/workflow.json)。
+原作・登場人物・絵柄・素材・出力を作品単位で分離しました。最新の使い方と確認手順は [REPRODUCE.md](../../REPRODUCE.md)。既存作品は [works/kensei/output/reader.html](../../works/kensei/output/reader.html)。別作品の雛形は [works/sample/workflow.json](../../works/sample/workflow.json)。
 
 `node new-work.mjs my-story "作品タイトル" "原作本文.txt"` で追加し、PowerShellで `$env:MANGA_PROJECT='works/my-story/workflow.json'` を指定します。
 
@@ -16,11 +16,11 @@
 
 **最新の第4版：** `output-v4/reader.html`。各コマの人物の口・顔の位置を記録し、吹き出しと尾を話者に合わせて修正しました。現在の再構築対象は第4版です。
 
-**再現用コマンド：** `npm run reproduce`。固定した入力から同じSVG・HTMLを再構築し、ハッシュ一致まで確認します。制作から保存・持ち運びまでの手順は [REPRODUCE.md](../REPRODUCE.md)。
+**再現用コマンド：** `npm run reproduce`。固定した入力から同じSVG・HTMLを再構築し、ハッシュ一致まで確認します。制作から保存・持ち運びまでの手順は [REPRODUCE.md](../../REPRODUCE.md)。
 
-**最新の第3版：** `output-v3/reader.html`（8ページ27コマ）。告白前の無言の反応と、次ページへの期待を追加。研究を参考にした変更と確認事項は [REVISION.md](../REVISION.md)。現在の `npm run workflow:build` は第3版へ出力します。
+**最新の第3版：** `output-v3/reader.html`（8ページ27コマ）。告白前の無言の反応と、次ページへの期待を追加。研究を参考にした変更と確認事項は [REVISION.md](REVISION.md)。現在の `npm run workflow:build` は第3版へ出力します。
 
-**新しい改訂版：** `output-v2/index.html`（8ページ26コマ）。セリフ先行のネーム、可変コマ割り、縦書き、素材と配置の変更検知を実装しました。再制作の手順は [WORKFLOW.md](../WORKFLOW.md)、セリフ付き生成の実例は `output-v2/experiments/index.html`。以下は保存してある初版の説明です。
+**新しい改訂版：** `output-v2/index.html`（8ページ26コマ）。セリフ先行のネーム、可変コマ割り、縦書き、素材と配置の変更検知を実装しました。再制作の手順は [WORKFLOW.md](WORKFLOW.md)、セリフ付き生成の実例は `output-v2/experiments/index.html`。以下は保存してある初版の説明です。
 
 『落ちこぼれの幼馴染を陰で支えていた俺、剣聖になった彼女が国王からの褒美に「俺との結婚」を願い出た』（月森ナギ）の全文を、結末まで8ページ24コマに短縮した漫画版です。冒頭だけのサンプルではありません。外見は原作で指定されていない部分を漫画用に設定しています。
 

@@ -1,14 +1,2 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os';
-import assert from 'node:assert/strict';
-import {fileURLToPath} from 'node:url';
-import {execFileSync} from 'node:child_process';
-import {trackState} from './state-history.mjs';
-const root=path.dirname(fileURLToPath(import.meta.url));
-assert.ok(process.env.MANGA_PROJECT,'Set MANGA_PROJECT explicitly');
-trackState(root,process.env.MANGA_PROJECT);
-const mode=process.argv[2]||'create';assert.ok(['create','verify'].includes(mode),'Use create | verify');
-const bundled=path.join(os.homedir(),'.cache','codex-runtimes','codex-primary-runtime','dependencies','python','python.exe');
-const python=process.env.MANGA_PYTHON||(fs.existsSync(bundled)?bundled:process.platform==='win32'?'python':'python3');
-execFileSync(python,[path.join(root,'export-pdf.py'),mode],{cwd:root,env:process.env,stdio:'inherit',windowsHide:true});
+// Compatibility entry point; implementation lives in cli/pdf.mjs.
+export * from './cli/pdf.mjs';

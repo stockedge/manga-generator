@@ -24,7 +24,7 @@
 2. ページで動かしたい感情、重要な瞬間、支えるビート、次に知りたいことを決める。全ページを同じ2コマ・同じサイズへ機械的に割り当てない。コマの面積・寄り方・余白に強弱を付け、無言の反応や余韻も選ぶ。
 3. 同時に成立しない複数の動作を1コマに押し込まない。「渡す→受け取る→しまう」の前後が消える場合は動作コマを加える。中心は1ビートとし、表情や小道具で支える。
 4. 会話を意味・息継ぎの単位へ分け、発話順・まとまり・改行を先に設計する。文字数だけで切らない。吹き出し→顔や反応→返答へ移れる人物配置を選ぶ。合わなければコマ分割や構図まで戻る。
-5. `node workflow.mjs plan` の `workflow/narrative-plan.json` と `workflow/reading-flow/` を確認する。場面・ページ境界、人物左右の逆転、面積とカメラ、近接する非連続発話を検討する。警告は検討候補で、自然さの自動判定ではない。
+5. `node cli/workflow.mjs plan` の `workflow/narrative-plan.json` と `workflow/reading-flow/` を確認する。場面・ページ境界、人物左右の逆転、面積とカメラ、近接する非連続発話を検討する。警告は検討候補で、自然さの自動判定ではない。
 6. サブエージェントはまず番号・誘導線のないネーム／合成画像を通常の読者のように読み、自然に次に読むセリフを記録する。その後、意図した配列と番号ネームを照合する。脚本を既に知るレビューなので、盲検の眼球運動実験と呼ばない。
 7. 参照とネームで作画する。実画像の顔・口・手・小道具を測り直す。尾が正しい人物へ向くだけでなく、その人物の反応を会話の途中で読めるかを見る。
 8. 文字合成を番号なしで再読する。前のまとまりを読み終える前に、同じ側の次の発話へ吸い寄せられないか確認する。無理な右→左→右往復は段を明確に分けるか別コマへ分割する。
@@ -76,14 +76,14 @@ sectionの説明に後の動作も含まれる場合は、そのコマでまだ�
 
 ```powershell
 $env:MANGA_PROJECT='works/my-story/workflow.json'
-node workflow.mjs plan
-node export.mjs works/my-story/workflow/storyboards-unnumbered
-node export.mjs works/my-story/workflow/reading-flow
+node cli/workflow.mjs plan
+node cli/export.mjs works/my-story/workflow/storyboards-unnumbered
+node cli/export.mjs works/my-story/workflow/reading-flow
 # 原作と脚本の正式レビューを済ませてから、ネームのrequestを作る
-node stage-review.mjs prepare storyboard 01
+node cli/stage-review.mjs prepare storyboard 01
 # 実際のサブエージェントが画像を読み、回答JSONを保存する
-node stage-review.mjs record storyboard 01 works/my-story/workflow/storyboard-01-response.json
-node stage-review.mjs check storyboard 01
+node cli/stage-review.mjs record storyboard 01 works/my-story/workflow/storyboard-01-response.json
+node cli/stage-review.mjs check storyboard 01
 ```
 
 storyboard・lettering・finalのpassには以下も必要。対象の全コマを列挙し、無言コマは `dialogue: []`。予測順が意図と違うならpassではなく修正要求。機械検査は記録形式と一致を検査し、実見や自然さを保証しない。

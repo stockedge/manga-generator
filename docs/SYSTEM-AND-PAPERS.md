@@ -68,7 +68,7 @@ flowchart TD
 
 | 論文 | 内容と対応 |
 | --- | --- |
-| P9：Siyu Chenほか（2024）, **Manga Generation via Layout-controllable Diffusion**。[arXiv:2412.19303](https://arxiv.org/abs/2412.19303) | `docs/README-history.md`の初期調査資料。Manga109StoryとMangaDiffusionを提案し、文章と各コマの意味対応、レイアウト、人物一貫性などを扱う。repoではこれらを別の制御課題として扱う背景に位置付けられるが、モデル・データセットは導入していない |
+| P9：Siyu Chenほか（2024）, **Manga Generation via Layout-controllable Diffusion**。[arXiv:2412.19303](https://arxiv.org/abs/2412.19303) | `docs/history/README-history.md`の初期調査資料。Manga109StoryとMangaDiffusionを提案し、文章と各コマの意味対応、レイアウト、人物一貫性などを扱う。repoではこれらを別の制御課題として扱う背景に位置付けられるが、モデル・データセットは導入していない |
 
 ## 4. 論文以外の背景資料
 
@@ -108,6 +108,6 @@ Tanaka・Iba論文の文献数は「140件を選定し、その時点で58書籍
 | 研究資料と実装の対応監査 | `docs/_research-integration-audit-20261008.json` |
 | ユーザー提供のネーム設計資料 | `research/user-name-design-20261008.txt`、`docs/research/user-name-design-20261006.txt` |
 | 独立レビューと保存・復元 | `docs/REVISION-AND-REVIEWS.md`、`stage-reviews.mjs`、`state-history.mjs` |
-| 初期設計の背景論文 | `docs/README-history.md` |
+| 初期設計の背景論文 | `docs/history/README-history.md` |
 
 本整理は文書とコードの照合による調査であり、作品の再検品・画像生成・ロック更新は行っていない。

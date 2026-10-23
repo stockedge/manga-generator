@@ -10,11 +10,11 @@
 
 ```powershell
 $env:MANGA_PROJECT='works/my-story/workflow.json'
-node history.mjs checkpoint '脚本修正前'
-node history.mjs run node works/my-story/revise-script.mjs
-node history.mjs list
-node history.mjs extract 保存状態ID tmp/restored-my-story
-node history.mjs bundle releases/my-story-intermediate-history.tar.gz
+node cli/history.mjs checkpoint '脚本修正前'
+node cli/history.mjs run node works/my-story/revise-script.mjs
+node cli/history.mjs list
+node cli/history.mjs extract 保存状態ID tmp/restored-my-story
+node cli/history.mjs bundle releases/my-story-intermediate-history.tar.gz
 ```
 
 `extract` は新しいフォルダへ取り出す。現在の作品や確定パッケージを上書きしない。全ファイルのハッシュを検査してから取り出す。復元した脚本・画像を現行作品に戻す際は、plan・採用・合成・検品を正式にやり直す。古い確認記録を現在の確認として流用しない。
@@ -45,7 +45,7 @@ node history.mjs bundle releases/my-story-intermediate-history.tar.gz
 
 新規作品には `productionReview.required: true` を設定する。主担当が作ったものを、実際に起動したサブエージェントに見せる。Node CLIだけでエージェントを呼んだことにしない。
 
-既存の未完成作品へ導入する場合は `node stage-review.mjs enable`。設定の導入だけで過去の工程が確認済みになるわけではない。完成済みの旧パッケージには遡って新しい確認記録を付けない。
+既存の未完成作品へ導入する場合は `node cli/stage-review.mjs enable`。設定の導入だけで過去の工程が確認済みになるわけではない。完成済みの旧パッケージには遡って新しい確認記録を付けない。
 
 | 工程 | レビュー対象 | 主な確認 |
 |---|---|---|
@@ -57,11 +57,11 @@ node history.mjs bundle releases/my-story-intermediate-history.tar.gz
 | final | 全原稿・読書画面・PDF | 結末と伏線、全体の理解、ページ間の流れ |
 
 ```powershell
-node stage-review.mjs prepare script all
+node cli/stage-review.mjs prepare script all
 # 返されたrequestと実ファイルを実際のサブエージェントへ渡す。
 # 観察・指摘・実際のtask名を含む回答JSONを作品内へ保存する。
-node stage-review.mjs record script all works/my-story/workflow/script-review-response.json
-node stage-review.mjs check script all
+node cli/stage-review.mjs record script all works/my-story/workflow/script-review-response.json
+node cli/stage-review.mjs check script all
 ```
 
 `prepare` は入力のハッシュを固定する。サブエージェントは全文・該当画像を読み、具体的な観察を返す。指摘が未解決なら `changes-requested`。修正後は新しいrequestで再レビューする。CLIは入力が変わった回答、未解決指摘を含むpass、エージェント名のない記録を拒否する。実際の起動・目視を行った証拠として回答とタスク名を残すが、エージェントの判断の正しさを機械的に保証するものではない。

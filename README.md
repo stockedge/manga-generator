@@ -45,6 +45,7 @@
 
 - [手動制作・再現のコマンド詳細](REPRODUCE.md)
 - [原作からの自動制作手順](docs/AUTOMATIC.md)
+- [開発者向けフォルダー構成](docs/PROJECT-LAYOUT.md)
 
 ## ライセンス
 
