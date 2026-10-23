@@ -258,3 +258,37 @@ fs.unlinkSync(completion);
 console.log(
   'PASS: automatic intake, BOM/UTF-8, stable resume, isolated works, explicit selection, coverage gaps, changed-source rejection and chunked archive hash/corruption/missing checks; status stubs are isolated fixtures, no actual work completed',
 );
+
+const externalSource = path.join(fixture, 'external.txt');
+fs.writeFileSync(externalSource, text + '\nExternal renderer test.');
+assert.match(
+  run([
+    'start',
+    externalSource,
+    '--renderer',
+    'ComfyUI+Qwen-Image-Edit-2511-FP8',
+  ]),
+  /Prepared:/,
+);
+const externalId = digest(fs.readFileSync(externalSource)).slice(0, 12);
+const externalBase = path.join(
+  fixture,
+  'works',
+  'auto-' + externalId,
+  'workflow',
+);
+const externalRequest = JSON.parse(
+  fs.readFileSync(path.join(externalBase, 'automation-request.json'), 'utf8'),
+);
+assert.equal(externalRequest.renderer, 'ComfyUI+Qwen-Image-Edit-2511-FP8');
+assert.equal(
+  externalRequest.execution,
+  'External renderer: ComfyUI+Qwen-Image-Edit-2511-FP8',
+);
+assert.doesNotMatch(
+  fs.readFileSync(path.join(externalBase, 'automatic-task.md'), 'utf8'),
+  /Codexの実行手順/,
+);
+assert.throws(() =>
+  run(['start', externalSource, '--renderer', 'another renderer']),
+);

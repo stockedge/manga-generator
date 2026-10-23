@@ -1,0 +1,2 @@
+scripts/comfyui/*.sh text eol=lf
+scripts/comfyui/*.py text eol=lf

@@ -66,3 +66,7 @@ After changing shared code, also explicitly set `MANGA_PROJECT` and run `npm run
 ## License
 
 Source code and documentation are provided under the [MIT License](LICENSE). Source stories and reference materials supplied by users, external models, and generated outputs remain subject to their respective rights and terms of use.
+
+## Claude Code
+
+See [Claude Code setup](docs/CLAUDE-CODE.md) and [ComfyUI provisioning](docs/COMFYUI.md) (Japanese). Claude Code orchestrates and reviews; external ComfyUI generates images. Composition, PDF, history and completion checks use the shared CLI. A separate GPU environment is required.

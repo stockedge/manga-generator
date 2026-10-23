@@ -187,3 +187,7 @@ PNG書き出しは `node cli/export.mjs 対象ディレクトリ 19-1` のよう
 複数ページの実画像座標をまとめて直した場合は `node cli/workflow.mjs layout all --apply` を使える。その後にplan、必要な再採用、previewと目視確認、reviewとquality-reviewを実行する。安全な座標だけでは話者が伝わることを保証しない。話者と反対側の吹き出しや、短い尾が別人の肩へ見える箇所は実プレビューで移動する。
 
 各コマの任意項目 `storyboardSketch` はネーム専用の構造化下図です。`version: 1`、一瞬を記す `moment`、`primitives`（line/rect/ellipse/構造化path）を指定し、座標はコマ内の0〜1で表します。生SVG/XML・外部URI・文字ラベルは受け付けず、コマ範囲でクリップします。指定したネームだけ顔ガイドの灰塗りを透明にし、完成画像へ下図を混ぜません。未指定の作品の描画とjobは変わりません。形を修正したら再planと必要な素材採用・工程reviewを行ってください。下図の顔・口・手・道具位置は予定であり、実画像では測り直して検品します。下図の存在やCLI成功を作画品質の合格と扱いません。
+
+## Claude Codeと外部ComfyUI
+
+[Claude Codeの実行対応](docs/CLAUDE-CODE.md)、[コミット対象の構築スクリプトと生成手順](docs/COMFYUI.md)を参照。`auto start --renderer "ComfyUI+Qwen-Image-Edit-2511-FP8"` で生成手段を明示し、既存の検品・履歴・再現条件を維持します。

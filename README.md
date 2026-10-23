@@ -68,3 +68,7 @@ Node.js 24で `npm ci` を実行すると、開発用のESLint・Prettier・Type
 ## ライセンス
 
 ソースコードとドキュメントは [MIT License](LICENSE) で提供します。利用者が用意する原作や参照素材、外部モデル、生成物にはそれぞれの権利と利用条件が適用されます。
+
+## Claude Codeで使う
+
+[Claude Code向け導入・制作手順](docs/CLAUDE-CODE.md)と[ComfyUI構築手順](docs/COMFYUI.md)を用意しています。画像生成は外部ComfyUI、視覚確認と独立レビューはClaude Code、組版・PDF・履歴・再現は共通CLIが担当します。GPU環境は別途必要です。
