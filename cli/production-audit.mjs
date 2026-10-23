@@ -55,6 +55,7 @@ function work(relative) {
     pages: config.pages.length,
     panels: panels.length,
     savedMaterials: saved.length,
+    savedPanelBytes: sampleBytes,
     pagesWithAllMaterials,
     recordedReviews: {
       source: countRecorded('source', ['all']),
@@ -108,11 +109,31 @@ if (mode === 'work') {
       title: w.title,
       ...work(w.config),
     }));
+  const totalSaved = works.reduce((n, w) => n + w.savedMaterials, 0);
+  const totalBytes = works.reduce((n, w) => n + w.savedPanelBytes, 0);
+  const missing = works.reduce((n, w) => n + w.panels - w.savedMaterials, 0);
+  const average = totalSaved ? totalBytes / totalSaved : null;
+  const estimatedRemainingPanelBytes =
+    average === null ? null : Math.ceil(average * missing);
+  const planningReserveBytes =
+    estimatedRemainingPanelBytes === null
+      ? null
+      : estimatedRemainingPanelBytes * 3;
+  const free = disk();
   console.log(
     JSON.stringify(
       {
-        disk: disk(),
+        disk: free,
         selected: manifest.works.length,
+        missingPanelMaterials: missing,
+        estimatedRemainingPanelBytes,
+        planningReserveBytes,
+        storageWarning:
+          planningReserveBytes !== null && free.freeBytes !== null
+            ? BigInt(free.freeBytes) < BigInt(planningReserveBytes)
+            : null,
+        planningNote:
+          'Remaining PNG estimate uses the average of saved works. Triple is a rough planning allowance for candidates, history, PDF and archives; it is not a guaranteed upper bound.',
         completeRecorded: works.filter((w) => w.completionRecorded).length,
         currentConfigMatchesCompletion: works.filter(
           (w) => w.currentConfigMatchesCompletion,
