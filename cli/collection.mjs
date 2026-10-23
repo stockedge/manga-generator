@@ -32,7 +32,7 @@ if(mode==='init'){
  for(const w of m.works){
   if(w.sourceHash)continue;
   const staging=base+'/source/'+w.id;
-  console.log(run('import-kakuyomu.mjs',[w.url,staging]));
+  console.log(run('cli/import-kakuyomu.mjs',[w.url,staging]));
   const bytes=fs.readFileSync(staging+'/original.txt'),sourceHash=hash(bytes);
   w.sourceHash=sourceHash;w.source=staging+'/original.txt';w.retrieval=staging+'/retrieval.json';
   let existing;
@@ -44,7 +44,7 @@ if(mode==='init'){
   if(existing){w.config=existing;w.status='needs-verification';}
   else{
    const config='works/auto-'+sourceHash.slice(0,12)+'/workflow.json';
-   console.log(run('auto.mjs',['start',w.source,'--title',w.title],config));w.config=config;w.status='prepared';
+   console.log(run('cli/auto.mjs',['start',w.source,'--title',w.title],config));w.config=config;w.status='prepared';
    const c=read(config);fs.copyFileSync(w.retrieval,path.dirname(config)+'/source/retrieval.json');fs.copyFileSync(w.retrieval,c.workflowDir+'/source-retrieval.json');
   }
   write(manifest,m);render(m);
@@ -57,7 +57,7 @@ if(mode==='init'){
   if(fs.existsSync(c.outputDir+'/reader.html'))w.reader=c.outputDir+'/reader.html';
   if(fs.existsSync(c.outputDir+'/pdf/manga.pdf'))w.pdf=c.outputDir+'/pdf/manga.pdf';
   if(!fs.existsSync(c.workflowDir+'/automation-request.json')){w.status='needs-verification';w.verification={note:'Legacy work: verify current source, reviews, PDF and reproducibility package before marking complete'};continue;}
-  try{const a=JSON.parse(run('auto.mjs',['status'],w.config));w.status=a.status==='complete'?'complete':w.status==='prepared'?'prepared':'in-progress';w.verification=a;}catch(e){w.status='needs-verification';w.verification={error:String(e.stderr||e.message).slice(0,500)};}
+  try{const a=JSON.parse(run('cli/auto.mjs',['status'],w.config));w.status=a.status==='complete'?'complete':w.status==='prepared'?'prepared':'in-progress';w.verification=a;}catch(e){w.status='needs-verification';w.verification={error:String(e.stderr||e.message).slice(0,500)};}
   if(fs.existsSync(completed))w.completionRecord=completed;
  }
  write(manifest,m);render(m);console.log(JSON.stringify(m.works.map(w=>({id:w.id,status:w.status,config:w.config})),null,2));

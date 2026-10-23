@@ -10,7 +10,7 @@ scriptの合格には全コマの `dialogueReview` が必要です。原作の�
 
 修正前後の状態保存、復元、セリフの視線誘導計画、各工程の独立レビューは [修正・レビュー手順](docs/REVISION-AND-REVIEWS.md) に従う。直接編集の前後は `history checkpoint`、作品内の編集スクリプトは `history run` を使う。
 
-原作だけからCodexへ制作を任せる場合は [自動制作](docs/AUTOMATIC.md) を使う。`auto.mjs start` は受付・再開、`status` は実物の状態確認、`finish` は既存の検品・原作対応・PDF検査・再構築・固定・パッケージ検証を通して完了を記録する。以下はその内部でも使う制作手順である。
+原作だけからCodexへ制作を任せる場合は [自動制作](docs/AUTOMATIC.md) を使う。`cli/auto.mjs start` は受付・再開、`status` は実物の状態確認、`finish` は既存の検品・原作対応・PDF検査・再構築・固定・パッケージ検証を通して完了を記録する。以下はその内部でも使う制作手順である。
 
 作品は works/<作品ID>/ に原作、設定、素材、ネーム、完成原稿を分けて保存する。現在の作品は works/kensei/。別作品用の未完成雛形は works/sample/。共通処理に登場人物名や作者名を埋め込まない。描画の方針は [第7版の記録](docs/ART-QUALITY.md)、従来の設計判断は [改善の記録](docs/IMPROVEMENTS.md) にまとめた。
 
@@ -70,7 +70,7 @@ workflow/story-memory.json に解決済みの場面状態を、panel-jobs.json �
 
 ここからのCLI例は操作の抜粋。生成準備へ進む前に source・script・対象ページの storyboard の最新正式レビューを通す。採用後は artwork、文字合成後は lettering、全体完成時は final を [工程レビュー](docs/REVISION-AND-REVIEWS.md) の prepare → 実際のサブエージェント確認 → record → check で記録する。番号なしネームのPNG出力と通常の読順確認は [読順確認](docs/NARRATIVE-FLOW.md) に従う。
 
-新規作品は renderMode: panels を標準にする。Codexの画像生成へコマの指示と参照画像を渡す。外部の画像生成環境を使う場合は、`generation.mjs prepare` と `accept-panel` に `--renderer` を指定する。文字・吹き出し・枠は描かせず、予定した吹き出し範囲を白く空ける。必要なコマだけ候補を追加して比較する。
+新規作品は renderMode: panels を標準にする。Codexの画像生成へコマの指示と参照画像を渡す。外部の画像生成環境を使う場合は、`cli/generation.mjs prepare` と `accept-panel` に `--renderer` を指定する。文字・吹き出し・枠は描かせず、予定した吹き出し範囲を白く空ける。必要なコマだけ候補を追加して比較する。
 
 ```powershell
 node cli/workflow.mjs candidate-panel 01-1 "C:\path\candidate-A.png" --note "表情A" --renderer "Codex built-in image_gen"

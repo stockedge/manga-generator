@@ -1,7 +1,4 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import assert from 'node:assert/strict';
-import {root,local} from './project.mjs';
 
 // Consolidate identical embedded page images without editing any image pixels.
 export function compactSVG(source){
@@ -12,13 +9,4 @@ export function compactSVG(source){
  const body=source.replace(pattern,(_,image,clip)=>`<use href="#compacted-page-${images.indexOf(image)}" clip-path="${clip}"/>`);
  const defs='<defs>'+images.map((href,i)=>`<image id="compacted-page-${i}" href="${href}" width="1024" height="1536" preserveAspectRatio="none"/>`).join('')+'</defs>';
  return body.replace(/(<svg\b[^>]*>)/,'$1'+defs);
-}
-if(process.argv[1] && ['compact-svg.mjs','cli/compact-svg.mjs'].some(file=>path.resolve(process.argv[1])===path.join(root,file))){
- for(const relative of process.argv.slice(2)){
-  const file=local(relative);assert.ok(!file.startsWith(path.join(root,'releases')+path.sep),'Preserve immutable releases');
-  assert.ok(file.endsWith('.svg'),'Expected SVG');
-  const before=fs.readFileSync(file,'utf8'),after=compactSVG(before);
-  if(after!==before)fs.writeFileSync(file,after);
-  console.log(relative+': '+Math.round((before.length-after.length)/1048576)+' MiB saved');
- }
 }

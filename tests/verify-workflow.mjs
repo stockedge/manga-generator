@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
-const run=(...args)=>execFileSync(process.execPath,['workflow.mjs',...args],{encoding:'utf8',stdio:'pipe'});
+const run=(...args)=>execFileSync(process.execPath,['cli/workflow.mjs',...args],{encoding:'utf8',stdio:'pipe'});
 import {config,configFile,root} from '../src/project.mjs';
 process.chdir(root);
 const outputDir=config.outputDir||'output-v2';

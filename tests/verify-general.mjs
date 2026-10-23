@@ -13,7 +13,7 @@ fs.mkdirSync('tmp',{recursive:true});
 const folder=fs.mkdtempSync(path.join(root,'tmp','generic-'));
 const relative=path.relative(root,folder).replaceAll('\\','/');
 const file=relative+'/workflow.json';
-const run=(...args)=>execFileSync(process.execPath,['workflow.mjs',...args],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true});
+const run=(...args)=>execFileSync(process.execPath,['cli/workflow.mjs',...args],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true});
 // A valid, blank PNG fixture keeps these checks independent of any work's artwork.
 function blankPNG(){
  const chunk=(type,data)=>{const body=Buffer.concat([Buffer.from(type),data]);let crc=0xffffffff;for(const byte of body){crc^=byte;for(let i=0;i<8;i++)crc=crc&1?(crc>>>1)^0xedb88320:crc>>>1;}const size=Buffer.alloc(4),sum=Buffer.alloc(4);size.writeUInt32BE(data.length);sum.writeUInt32BE((crc^0xffffffff)>>>0);return Buffer.concat([size,body,sum]);};
@@ -45,7 +45,7 @@ try {
  fs.writeFileSync(folder+'/original.txt','別の原作');
  const save=v=>fs.writeFileSync(folder+'/workflow.json',JSON.stringify(v));
  save(c);run('check');run('plan');assert.match(run('status'),/pending/);assert.throws(()=>run('build'));
- const exportFixture=(...args)=>execFileSync(process.execPath,['export.mjs',relative+'/workflow/storyboards',...args],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true});
+ const exportFixture=(...args)=>execFileSync(process.execPath,['cli/export.mjs',relative+'/workflow/storyboards',...args],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true});
  assert.throws(()=>exportFixture('png','01'),/Unknown export selection/,'A mistaken format word must not silently export zero pages');
  assert.throws(()=>exportFixture('01','02'),/Use one selection only/,'A second selection must not be silently ignored');
  const fails=(edit,message)=>{const bad=structuredClone(c);edit(bad);save(bad);assert.throws(()=>run('check'),message);save(c);};
@@ -129,7 +129,7 @@ try {
  const image=blankPNG();fs.writeFileSync(folder+'/a.png',image);fs.writeFileSync(folder+'/b.png',Buffer.concat([image,Buffer.from('provenance-fixture')]));
  fs.writeFileSync(folder+'/invalid.png','not an image');assert.throws(()=>run('accept','01',relative+'/invalid.png','--reviewed'),/Expected a PNG/);
  fs.writeFileSync(folder+'/edit.txt','Image1 is the target. Image2 supplies the held-object shape only. Preserve target acting and composition.');
- const prepareFixture=(...args)=>JSON.parse(execFileSync(process.execPath,['generation.mjs','prepare-edit',c.pages[0].panels[0].id,relative+'/a.png',relative+'/edit.txt',...args],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true}));
+ const prepareFixture=(...args)=>JSON.parse(execFileSync(process.execPath,['cli/generation.mjs','prepare-edit',c.pages[0].panels[0].id,relative+'/a.png',relative+'/edit.txt',...args],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true}));
  const single=prepareFixture(),supported=prepareFixture('--reference',relative+'/b.png');
  assert.notEqual(single.request,supported.request,'Supporting material changes the saved edit input identity');
  const request=JSON.parse(fs.readFileSync(path.join(root,supported.request),'utf8'));
@@ -138,7 +138,7 @@ try {
  for(const r of request.references)assert.equal(fs.readFileSync(path.join(root,r.file)).compare(fs.readFileSync(path.join(root,r.original))),0,'Every edit input must be snapshotted byte-for-byte');
  assert.throws(()=>prepareFixture('--reference'),/Use --reference PATH/,'Incomplete optional reference must be rejected');
   assert.throws(()=>prepareFixture('--unexpected',relative+'/b.png'),/Unknown edit option/);
-  assert.throws(()=>execFileSync(process.execPath,['generation.mjs','prepare',c.pages[0].panels[0].id,'--reference',relative+'/b.png'],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true}),/Supporting references are available for prepare-edit only/);
+  assert.throws(()=>execFileSync(process.execPath,['cli/generation.mjs','prepare',c.pages[0].panels[0].id,'--reference',relative+'/b.png'],{cwd:root,env:{...process.env,MANGA_PROJECT:file},encoding:'utf8',stdio:'pipe',windowsHide:true}),/Supporting references are available for prepare-edit only/);
  run('accept','01',relative+'/a.png','--reviewed');assert.match(run('status'),/stale/);assert.throws(()=>run('build'));
  assert.throws(()=>run('review','01','--speakers'));
  run('preview');run('review','01','--speakers','--faces','--order','--continuity');run('build');

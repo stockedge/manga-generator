@@ -47,7 +47,7 @@ export function checkpoint(root,work,label='manual'){
   fs.mkdirSync(folder,{recursive:true});
   const cacheFile=path.join(folder,'cache.json');
   const cache=fs.existsSync(cacheFile)?readJSON(cacheFile):{};
-  const shared=fs.readdirSync(loc.root).filter(name=>/\.(mjs|py|html|md)$/.test(name) || name==='package.json').map(name=>path.join(loc.root,name));
+  const shared=fs.readdirSync(loc.root).filter(name=>/\.(mjs|py|html|md)$/.test(name) || ['package.json','LICENSE'].includes(name)).map(name=>path.join(loc.root,name));
   const sample=path.join(loc.root,'works','sample','workflow.json');
   if(fs.existsSync(sample)&&!inside(loc.work,sample))shared.push(sample);
   if(fs.existsSync(path.join(loc.root,'docs')))shared.push(...files(path.join(loc.root,'docs')));

@@ -1,6 +1,6 @@
 // ComfyUI API driver for Qwen-Image-Edit-2511 (Node standard library only).
 // Usage:
-//   node qwen-comfy.mjs run --prompt-file PROMPT.txt --out out.png [--images ref1.png,ref2.png] [options]
+//   node cli/qwen-comfy.mjs run --prompt-file PROMPT.txt --out out.png [--images ref1.png,ref2.png] [options]
 // Connects to ComfyUI over HTTP; for a RunPod pod use an SSH tunnel:
 //   ssh -N -L 8188:localhost:8188 root@<pod-host> -p <port>
 import fs from 'node:fs';

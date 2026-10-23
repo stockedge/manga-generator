@@ -53,7 +53,7 @@ try{
   assert.equal(fs.readFileSync(path.join(restored,'reader.html'),'utf8'),'reader template');
   assert.equal(fs.readFileSync(path.join(restored,'export-pdf.py'),'utf8'),'PDF exporter');
   assert.throws(()=>extractState(root,work,first.id,work),/NEW directory/);
-  const moduleURL=pathToFileURL(path.resolve('state-history.mjs')).href;
+  const moduleURL=pathToFileURL(path.resolve('src/state-history.mjs')).href;
   const child=spawnSync(process.execPath,['--input-type=module','-e',`import fs from 'node:fs'; import {trackState} from ${JSON.stringify(moduleURL)}; trackState(${JSON.stringify(root)},'works/example/workflow.json'); fs.writeFileSync(${JSON.stringify(path.join(work,'workflow.json'))},'partial failed edit'); throw new Error('intentional failure');`],{encoding:'utf8',windowsHide:true});
   assert.notEqual(child.status,0);
   const states=listStates(root,work);assert.equal(states.length,3);
@@ -129,9 +129,9 @@ try{
   const missingNeighbor=captureReview(root,neighborConfig,'cfg','lettering','02');assert.equal(missingNeighbor.entries['neighbor/review/page-01.png'],null);
   fs.writeFileSync(path.join(neighborWork,'review','page-01.png'),'new synthetic neighbor image');const presentNeighbor=captureReview(root,neighborConfig,'cfg','lettering','02');assert.notEqual(missingNeighbor.fingerprint,presentNeighbor.fingerprint);assert.ok(presentNeighbor.files.includes('neighbor/review/page-01.png'));
   c.pages[0].panels[0].dialogue[0].text='different';assert.throws(()=>requireReview(root,c,'works/example/workflow.json','script'),/Stale subagent review/);
-  copyRuntime(workspaceRoot,root,['project.mjs','state-history.mjs','stage-review.mjs','stage-reviews.mjs']);
+  copyRuntime(workspaceRoot,root);
   fs.writeFileSync(path.join(work,'workflow.json'),JSON.stringify(c));
-  const cli=(...args)=>spawnSync(process.execPath,[path.join(root,'stage-review.mjs'),...args],{cwd:root,env:{...process.env,MANGA_PROJECT:'works/example/workflow.json'},encoding:'utf8',windowsHide:true});
+  const cli=(...args)=>spawnSync(process.execPath,[path.join(root,'cli/stage-review.mjs'),...args],{cwd:root,env:{...process.env,MANGA_PROJECT:'works/example/workflow.json'},encoding:'utf8',windowsHide:true});
   const prepared=cli('prepare','script','all');assert.equal(prepared.status,0,prepared.stderr);
   const savedRequest=JSON.parse(prepared.stdout).request;
   const response={request:savedRequest,reviewer:{role:'subagent',task:'synthetic-cli-test'},status:'changes-requested',observations:['Synthetic regression evidence only.','No story or artwork was visually reviewed.'],issues:[{problem:'test issue',location:'01-1',resolved:false}]};

@@ -6,7 +6,7 @@ import {checkpoint} from '../src/state-history.mjs';
 import {root} from '../src/workspace.mjs';
 const [slug,title,...rest]=process.argv.slice(2);
 assert.match(slug||'',/^[a-z][a-z0-9-]{0,63}$/,'Use a lowercase work ID');
-assert.ok(title && !title.startsWith('--'),'Usage: node new-work.mjs WORK-ID TITLE [SOURCE-TEXT-FILE] [--renderer NAME]');
+assert.ok(title && !title.startsWith('--'),'Usage: node cli/new-work.mjs WORK-ID TITLE [SOURCE-TEXT-FILE] [--renderer NAME]');
 const source=rest[0] && !rest[0].startsWith('--')?rest[0]:undefined;
 const flagArgs=rest.slice(source?1:0);
 let renderer=null;

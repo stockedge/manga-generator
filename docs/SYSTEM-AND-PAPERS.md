@@ -24,30 +24,30 @@ flowchart TD
     R -.-> I
 ```
 
-`auto.mjs start` は受付・再開とCodexへの実行依頼を作成する。画像生成はCodexが実際にツールを呼ぶ工程であり、受付コマンドだけでは作画は完了しない。
+`cli/auto.mjs start` は受付・再開とCodexへの実行依頼を作成する。画像生成はCodexが実際にツールを呼ぶ工程であり、受付コマンドだけでは作画は完了しない。
 
 ## 2. 仕組みの一覧
 
 | 仕組み | 実際に行うこと | 主な実装・保存先 | 背景との関係 |
 | --- | --- | --- | --- |
-| 作品の独立管理 | 新作は別ディレクトリへ作成。`MANGA_PROJECT`で対象を選択。同じ原作の自動受付は再開する | `new-work.mjs`、`project.mjs`、`auto.mjs`、`works/<ID>/` | repoの運用設計 |
+| 作品の独立管理 | 新作は別ディレクトリへ作成。`MANGA_PROJECT`で対象を選択。同じ原作の自動受付は再開する | `cli/new-work.mjs`、`src/project.mjs`、`cli/auto.mjs`、`works/<ID>/` | repoの運用設計 |
 | 原作からの脚本化 | ページの狙い・次への期待、コマの役割・動作・表情・画角・セリフをCodexが設計 | 各作品の`workflow.json` | P1の工程分離、P4・P6の物語とネームの考え方 |
-| 原作全体の対応表 | 本文の連続した区間をコマと漫画化方法へ対応付け、区間の欠落・重複を検査 | `auto.mjs`、`workflow/source-coverage.json` | repoの検証設計。文字範囲の網羅だけでは意味の忠実性を証明しない |
-| 人物と場面状態の分離 | 恒常的な外見は`cast`、舞台・衣装・小道具は`sections`、コマ固有の違いは`panel.state`へ保存 | `workflow.mjs`の`stateFor`、`story-memory.json` | P1のsection memory、P2の人物同一性と演技の両立 |
-| 顔の基準と参照役割 | 顔の3特徴、角度・表情の基準画像、顔・線・構図・衣装などの参照用途を明示 | `face-design.mjs`、`cast.faceDesign`、`referenceRoles` | P2と公式画像生成ガイドを制作手順へ応用。3特徴という数はrepo独自 |
-| ネームと文字領域の先行設計 | 作画前にコマ・顔・口・吹き出しの領域を設定。番号あり・番号なし・コマ単位の参照を出力 | `workflow.mjs plan`、`storyboards/`、`storyboards-unnumbered/`、`panels/` | P1・P9の制御課題、P4・P5の絵と文字の統合 |
-| 読順・場面接続の計画 | 会話群、魅せゴマ、面積比、情報公開、ページ末の問い、全隣接コマの時刻・場所・小道具・左右変化を台帳化 | `reading-flow.mjs`、`reading-flow/`、`narrative-plan.json` | P4〜P8。台帳のスキーマと警告アルゴリズムはrepo独自 |
+| 原作全体の対応表 | 本文の連続した区間をコマと漫画化方法へ対応付け、区間の欠落・重複を検査 | `cli/auto.mjs`、`workflow/source-coverage.json` | repoの検証設計。文字範囲の網羅だけでは意味の忠実性を証明しない |
+| 人物と場面状態の分離 | 恒常的な外見は`cast`、舞台・衣装・小道具は`sections`、コマ固有の違いは`panel.state`へ保存 | `cli/workflow.mjs`の`stateFor`、`story-memory.json` | P1のsection memory、P2の人物同一性と演技の両立 |
+| 顔の基準と参照役割 | 顔の3特徴、角度・表情の基準画像、顔・線・構図・衣装などの参照用途を明示 | `src/face-design.mjs`、`cast.faceDesign`、`referenceRoles` | P2と公式画像生成ガイドを制作手順へ応用。3特徴という数はrepo独自 |
+| ネームと文字領域の先行設計 | 作画前にコマ・顔・口・吹き出しの領域を設定。番号あり・番号なし・コマ単位の参照を出力 | `cli/workflow.mjs plan`、`storyboards/`、`storyboards-unnumbered/`、`panels/` | P1・P9の制御課題、P4・P5の絵と文字の統合 |
+| 読順・場面接続の計画 | 会話群、魅せゴマ、面積比、情報公開、ページ末の問い、全隣接コマの時刻・場所・小道具・左右変化を台帳化 | `src/reading-flow.mjs`、`reading-flow/`、`narrative-plan.json` | P4〜P8。台帳のスキーマと警告アルゴリズムはrepo独自 |
 | コマ単位の画像生成 | 標準は`renderMode: panels`。基準画像とネームを使い、文字・吹き出しなしのコマを生成 | `panel-jobs.json`、Codexの組み込み`image_gen` | P1の工程分離、P2・P9の課題設定を応用。各研究モデルは未導入 |
-| 生成・編集の証跡 | 実際の指示、参照画像の不変コピー、ハッシュ、出力画像、生成手段を保存 | `generation.mjs`、`generation-inputs/`、`generation-history/`、`generation-log.json` | repoの証跡設計。準備・記録CLI自体は画像生成を実行しない |
-| 候補比較と採用 | コマ候補の比較HTMLを作り、理由を付けて採用。古い指示の候補は採用時に拒否 | `workflow.mjs candidate-panel / accept-panel`、`assets/candidates/` | repoの選択・履歴設計 |
+| 生成・編集の証跡 | 実際の指示、参照画像の不変コピー、ハッシュ、出力画像、生成手段を保存 | `cli/generation.mjs`、`generation-inputs/`、`generation-history/`、`generation-log.json` | repoの証跡設計。準備・記録CLI自体は画像生成を実行しない |
+| 候補比較と採用 | コマ候補の比較HTMLを作り、理由を付けて採用。古い指示の候補は採用時に拒否 | `cli/workflow.mjs candidate-panel / accept-panel`、`assets/candidates/` | repoの選択・履歴設計 |
 | 実画像に合わせた位置計測 | 見えている全顔・口・重要な手や小道具を登録し、画像差し替え後に再測定 | `speakers.anchor`、`speakers.face`、`protected` | P5の人物と吹き出しの統合配置を実務へ応用。座標は自動認識しない |
-| 日本語の別組版 | セリフを右から左の縦列へ分け、吹き出し・尾・枠をSVGで重ねる。`textColumns`で意味単位の列を指定できる | `workflow.mjs`の`columns / speechColumns / box / tailGeometry / svg` | repoの組版実装と日本語漫画の制作ガイド |
-| 幾何検査と自動配置 | 枠外・吹き出し同士の重なり・顔や保護領域の遮蔽・尾の交差・粗い読順違反を拒否。候補位置を探索する | `workflow.mjs validate / layout` | P5の問題意識に対応。論文の確率モデルの実装ではない |
-| 描画の倍率別検品 | 縮小・100%・200%と合成を見て、人体・接触・物・顔・線・背景・連続性・文字の8項目と全顔の特徴を記録 | `quality.mjs`、`face-design.mjs`、`quality-plan / quality-review / quality-repair` | P3のアーティファクト研究を漫画の検品へ応用。検品項目・倍率・判定ゲートはrepo独自 |
-| 工程ごとの独立レビュー | 原作・脚本・ネーム・実画像・文字合成・最終原稿の6工程をサブエージェントが確認。未解決指摘・古い入力・読順不一致を拒否 | `stage-review.mjs`、`stage-reviews.mjs` | repoの工程設計。論文で実証済みの品質保証として扱わない |
-| 変更時の失効 | 指示・参照・素材・配置などのハッシュを確認し、古い採用記録・検品・レビューを使わせない | `workflow.mjs`、`quality.mjs`、`stage-reviews.mjs` | repoの検証設計。変更の影響範囲に応じて失効する |
-| 状態履歴と復元 | 実行前後や失敗途中の状態を保存。内容ハッシュ別に画像を保持し、新しいフォルダへ復元 | `state-history.mjs`、`history.mjs`、`.manga-history/` | repoの保存設計 |
-| 完成出力と再現 | 絵と文字を分離したレイヤー、読書HTML・PNG・PDFを作成。採用済み入力を固定してSVG・HTMLの同一性を検証 | `workflow.mjs`、`export.mjs`、`pdf.mjs`、`export-pdf.py`、`reproduce.mjs`、`archive.mjs` | repoの成果物・再現設計 |
+| 日本語の別組版 | セリフを右から左の縦列へ分け、吹き出し・尾・枠をSVGで重ねる。`textColumns`で意味単位の列を指定できる | `cli/workflow.mjs`の`columns / speechColumns / box / tailGeometry / svg` | repoの組版実装と日本語漫画の制作ガイド |
+| 幾何検査と自動配置 | 枠外・吹き出し同士の重なり・顔や保護領域の遮蔽・尾の交差・粗い読順違反を拒否。候補位置を探索する | `cli/workflow.mjs validate / layout` | P5の問題意識に対応。論文の確率モデルの実装ではない |
+| 描画の倍率別検品 | 縮小・100%・200%と合成を見て、人体・接触・物・顔・線・背景・連続性・文字の8項目と全顔の特徴を記録 | `src/quality.mjs`、`src/face-design.mjs`、`quality-plan / quality-review / quality-repair` | P3のアーティファクト研究を漫画の検品へ応用。検品項目・倍率・判定ゲートはrepo独自 |
+| 工程ごとの独立レビュー | 原作・脚本・ネーム・実画像・文字合成・最終原稿の6工程をサブエージェントが確認。未解決指摘・古い入力・読順不一致を拒否 | `cli/stage-review.mjs`、`src/stage-reviews.mjs` | repoの工程設計。論文で実証済みの品質保証として扱わない |
+| 変更時の失効 | 指示・参照・素材・配置などのハッシュを確認し、古い採用記録・検品・レビューを使わせない | `cli/workflow.mjs`、`src/quality.mjs`、`src/stage-reviews.mjs` | repoの検証設計。変更の影響範囲に応じて失効する |
+| 状態履歴と復元 | 実行前後や失敗途中の状態を保存。内容ハッシュ別に画像を保持し、新しいフォルダへ復元 | `src/state-history.mjs`、`cli/history.mjs`、`.manga-history/` | repoの保存設計 |
+| 完成出力と再現 | 絵と文字を分離したレイヤー、読書HTML・PNG・PDFを作成。採用済み入力を固定してSVG・HTMLの同一性を検証 | `cli/workflow.mjs`、`cli/export.mjs`、`cli/pdf.mjs`、`export-pdf.py`、`cli/reproduce.mjs`、`src/archive.mjs` | repoの成果物・再現設計 |
 
 ## 3. 背景論文の一覧
 
@@ -99,15 +99,15 @@ Tanaka・Iba論文の文献数は「140件を選定し、その時点で58書籍
 | 確認したいこと | repo内の資料 |
 | --- | --- |
 | 全体の使い方 | `README.md`、`REPRODUCE.md` |
-| 原作だけからの自動制作 | `docs/AUTOMATIC.md`、`auto.mjs` |
+| 原作だけからの自動制作 | `docs/AUTOMATIC.md`、`cli/auto.mjs` |
 | 工程分離・場面状態の採用根拠 | `docs/IMPROVEMENTS.md` |
 | 描画検品と写真研究の応用範囲 | `docs/ART-QUALITY.md` |
 | 顔の特徴・参照役割・公式ガイド | `docs/FACE-DESIGN.md` |
-| 読順・時間・感情・場面接続 | `docs/NARRATIVE-FLOW.md`、`reading-flow.mjs` |
+| 読順・時間・感情・場面接続 | `docs/NARRATIVE-FLOW.md`、`src/reading-flow.mjs` |
 | 一次資料の過去の閲読範囲・採用と留保 | `docs/_research-flow-review-20261006.json` |
 | 研究資料と実装の対応監査 | `docs/_research-integration-audit-20261008.json` |
 | ユーザー提供のネーム設計資料 | `research/user-name-design-20261008.txt`、`docs/research/user-name-design-20261006.txt` |
-| 独立レビューと保存・復元 | `docs/REVISION-AND-REVIEWS.md`、`stage-reviews.mjs`、`state-history.mjs` |
+| 独立レビューと保存・復元 | `docs/REVISION-AND-REVIEWS.md`、`src/stage-reviews.mjs`、`src/state-history.mjs` |
 | 初期設計の背景論文 | `docs/history/README-history.md` |
 
 本整理は文書とコードの照合による調査であり、作品の再検品・画像生成・ロック更新は行っていない。

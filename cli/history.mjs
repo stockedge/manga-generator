@@ -36,7 +36,7 @@ if(mode==='checkpoint-all'){
       const manifest=JSON.parse(fs.readFileSync(file,'utf8'));
       for(const item of Object.values(manifest.entries))add(path.join(root,'.manga-history','objects',item.hash.slice(0,2),item.hash));
     }
-    for(const name of ['history.mjs','state-history.mjs','archive.mjs',...runtimeFiles(root)])add(path.join(root,name));
+    for(const name of [...runtimeFiles(root),'LICENSE'])add(path.join(root,name));
     process.chdir(root);await pack(path.resolve(arg),entries);console.log('Saved portable intermediate history: '+path.resolve(arg));
   }else throw new Error('Use checkpoint [LABEL] | checkpoint-all [LABEL] | list | extract ID NEW_DIRECTORY | run EXECUTABLE [ARGS...] | bundle NEW_ARCHIVE.tar.gz');
 }
