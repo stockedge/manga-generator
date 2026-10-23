@@ -184,6 +184,34 @@ try {
   assert.match(repair.prompt, /Image 4: layout/);
   assert.ok(!repair.prompt.includes('SCENE DATA'));
 
+  config.referenceRoles = { [config.references[1]]: 'Changed support role' };
+  write('fixture/workflow.json', config);
+  assert.throws(
+    () => run('generation', 'prepare', panel.id),
+    'Changed roles require a fresh plan',
+  );
+  delete config.referenceRoles;
+  const detail = 'fixture/assets/detail.png';
+  write(detail, png);
+  panel.references = [detail];
+  config.renderMode = 'page';
+  write('fixture/workflow.json', config);
+  run('workflow', 'plan');
+  const pageJob = read('fixture/workflow/jobs.json')[0];
+  assert.equal(pageJob.promptVersion, 2);
+  assert.ok(
+    pageJob.references.includes(detail),
+    'Page generation must include panel-specific references',
+  );
+  assert.equal(
+    pageJob.referenceManifest.find((r) => r.file === detail).kind,
+    'support',
+  );
+  delete panel.references;
+  config.renderMode = 'panels';
+  write('fixture/workflow.json', config);
+  run('workflow', 'plan');
+
   // This test records synthetic observations; it certifies no real image review.
   config.productionReview = { required: true, readingProtocol: 'two-phase-v1' };
   write('fixture/workflow/storyboards-unnumbered/page-01.png', png);
