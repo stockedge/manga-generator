@@ -6,10 +6,15 @@
 
 文字や吹き出しを絵と分けて配置するため、後から台詞を直しやすい仕組みです。
 
+<p align="center"><img src="docs/showcase/novel-account-page-01.png" width="480" alt="完成した漫画の冒頭ページ。教室で小説アカウントの秘密を話す二人の、セリフ入り２コマ。"></p>
+
+完成原稿の例：『[クラスの高嶺の花に俺の小説アカウントがバレた](https://kakuyomu.jp/works/11054822663326441351)』冒頭の２コマ。画像生成後にセリフと吹き出しを組版しています。
+
 ## 制作例
 
 - [Amazonの作品ページ](https://www.amazon.co.jp/dp/B0HNKVPM5P)
 - [Xで公開している漫画](https://x.com/tsukimori_nagi/status/2112100070900592877)
+- [英語の導入・制作例](docs/QUICKSTART.en.md)
 
 ## はじめかた（3ステップ）
 
@@ -48,6 +53,7 @@
 - [手動制作・再現のコマンド詳細](REPRODUCE.md)
 - [原作からの自動制作手順](docs/AUTOMATIC.md)
 - [開発者向けフォルダー構成](docs/PROJECT-LAYOUT.md)
+- [GitHubでの利用状況と計測方法](docs/GITHUB-ADOPTION.md)
 
 ## Claude Codeで使う
 

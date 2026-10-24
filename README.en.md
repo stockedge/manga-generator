@@ -6,10 +6,15 @@ A manga production tool for working with Codex to turn a novel or other source t
 
 Text and speech bubbles are placed separately from the artwork, making dialogue easier to revise later.
 
+<p align="center"><img src="docs/showcase/novel-account-page-01.png" width="480" alt="A finished two-panel manga page with dialogue: two classmates discuss a secret novel account."></p>
+
+A finished opening page from [*The Class Idol Found My Novel Account*](https://kakuyomu.jp/works/11054822663326441351). The Japanese dialogue and bubbles were composed after the artwork was generated.
+
 ## Examples
 
 - [Book on Amazon Japan](https://www.amazon.co.jp/dp/B0HNKVPM5P)
 - [Manga published on X](https://x.com/tsukimori_nagi/status/2112100070900592877)
+- [English setup and production walkthrough](docs/QUICKSTART.en.md)
 
 ## Getting started in three steps
 
@@ -43,11 +48,12 @@ To complete production automatically, your Codex environment must support **imag
 
 ## Detailed documentation
 
-For manual production steps and developer command specifications, see the following documents. These are currently in Japanese.
+Start with the [English setup and production walkthrough](docs/QUICKSTART.en.md). The detailed command specifications below are currently in Japanese.
 
 - [Manual production and reproducibility commands](REPRODUCE.md)
 - [Automatic production from source text](docs/AUTOMATIC.md)
 - [Repository layout for developers](docs/PROJECT-LAYOUT.md)
+- [GitHub adoption metrics and measurement plan (Japanese)](docs/GITHUB-ADOPTION.md)
 
 ## Claude Code
 
