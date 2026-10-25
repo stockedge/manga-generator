@@ -1,0 +1,18 @@
+{
+  "kind": "Actual fresh Codex process smoke test with synthetic source; not a savings measurement or a production approval",
+  "status": "executed",
+  "responseStatus": "pass",
+  "history": "none",
+  "promptCharacters": 1045,
+  "usage": [
+    {
+      "input_tokens": 25188,
+      "cached_input_tokens": 13440,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 83,
+      "reasoning_output_tokens": 0
+    }
+  ],
+  "usageMeasured": true,
+  "logs": "tmp\\reviewer-smoke-62554041-7c34-41f6-a4c5-c8eb19837338"
+}

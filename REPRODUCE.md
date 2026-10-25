@@ -1,5 +1,9 @@
 # 汎用の漫画制作ワークフロー（第8版）
 
+品質優先／節約の選択と切替は [制作モード](docs/PRODUCTION-MODES.md) を参照。新規受付は `node cli/auto.mjs start 原作.txt --mode economy`、既存作品はMANGA_PROJECTを明示して `node cli/stage-review.mjs mode quality`。省略時は従来動作を維持する。
+
+独立レビューは `node cli/review-run.mjs script all`、変更対象の確認は `node cli/stage-review.mjs pending`。新規作品はsource・script・全ネームのレビュー後に `node cli/stage-review.mjs seal` を行ってから作画する。修正は `reopen "理由"` から可能。節約出力の全文はdetails/requestへ保存され、`--verbose` でも取得できる。比較は `node cli/compare-modes.mjs`。
+
 作画前の共通監査は `node cli/production-audit.mjs work works/my-story/workflow.json`、コレクション進捗は `node cli/production-audit.mjs collection isseimori`。新規作品は `productionPreflight.required` により、各コマの瞬間・前後、可視人物の左右の手、重要小道具の前・現在・後を `panel.production` へ記録する。監査は文字予約面積と予定顔高も警告する。警告を直してから `generation prepare` へ進む。監査の数値だけでは自然な読順や小道具の物理的整合性を保証しないため、番号なしネームと前後コマを実読する。局所修正計画が同じ構図で3回に達したら、構図または文字組へ戻す。`auto status` の素材数・容量概算は完成判定と区別する。
 
 新規作品の生成指示と、画像だけの初読を保存してから照合する手順は [生成指示と読順レビュー](docs/PROMPTS.md) を参照。既存作品の指示・採用・レビューは自動移行しない。

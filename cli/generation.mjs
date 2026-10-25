@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import { loadProject } from '../src/project.mjs';
 const { config: c, local, configFile, root } = loadProject();
 import { requireReview } from '../src/stage-reviews.mjs';
+import { requireDesignSeal } from '../src/review-progress.mjs';
+import { emitResult } from '../src/cli-output.mjs';
 import { inspectProduction } from '../src/production-preflight.mjs';
 import {
   modernPrompts,
@@ -22,6 +24,7 @@ const write = (f, v) => {
 const [mode, id, input] = process.argv.slice(2);
 const jobs = read(c.workflowDir + '/panel-jobs.json');
 if (mode === 'prepare' || mode === 'prepare-edit') {
+  requireDesignSeal(root, c, configFile);
   const j = jobs.find((j) => j.id === id);
   assert.ok(j, 'Unknown panel');
   requireReview(root, c, configFile, 'source');
@@ -57,6 +60,7 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
   for (let i = 0; i < extra.length; i++) {
     const a = extra[i],
       v = extra[i + 1];
+    if (a === '--verbose') continue;
     if (a === '--renderer' || a === '--model' || a === '--seed') {
       assert.ok(v !== undefined && !v.startsWith('--'), 'Missing value: ' + a);
       genOpts[a.slice(2)] = v;
@@ -163,14 +167,12 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
       'Immutable generation request changed',
     );
   else write(requestFile, request);
-  console.log(
-    JSON.stringify({
-      request: requestFile,
-      prompt,
-      references: references.map((r) => local(r.file)),
-      ...(modern ? { referenceManifest: references } : {}),
-    }),
-  );
+  emitResult(c, local, {
+    request: requestFile,
+    prompt,
+    references: references.map((r) => local(r.file)),
+    ...(modern ? { referenceManifest: references } : {}),
+  });
 } else if (mode === 'record') {
   assert.ok(
     input && process.argv[5],

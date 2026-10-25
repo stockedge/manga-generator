@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { trackState, checkpoint } from '../src/state-history.mjs';
-import { requireReview } from '../src/stage-reviews.mjs';
+import { requireReview, productionMode } from '../src/stage-reviews.mjs';
 import { inspectProduction } from '../src/production-preflight.mjs';
 
 import { root } from '../src/workspace.mjs';
@@ -77,7 +77,7 @@ const [command = 'help', source, ...options] = process.argv.slice(2);
 if (command === 'start') {
   assert.ok(
     source,
-    'Usage: node cli/auto.mjs start ORIGINAL.txt [--title TITLE]',
+    'Usage: node cli/auto.mjs start ORIGINAL.txt [--title TITLE] [--mode quality|economy]',
   );
   const bytes = fs.readFileSync(path.resolve(source));
   const text = new TextDecoder('utf-8', { fatal: true })
@@ -88,20 +88,25 @@ if (command === 'start') {
   let title = path.basename(source, path.extname(source)),
     renderer = 'Codex built-in image_gen',
     titleGiven = false,
-    rendererGiven = false;
+    rendererGiven = false,
+    mode = 'quality',
+    modeGiven = false;
   for (let i = 0; i < options.length; i++) {
     const a = options[i],
       v = options[i + 1];
     assert.ok(
-      (a === '--title' || a === '--renderer') &&
+      (a === '--title' || a === '--renderer' || a === '--mode') &&
         v !== undefined &&
         !v.startsWith('--') &&
         v.trim(),
-      'Use only --title TITLE and --renderer NAME',
+      'Use only --title TITLE, --renderer NAME and --mode quality|economy',
     );
     if (a === '--title') {
       title = v;
       titleGiven = true;
+    } else if (a === '--mode') {
+      mode = productionMode({ productionMode: v });
+      modeGiven = true;
     } else {
       renderer = v;
       rendererGiven = true;
@@ -122,6 +127,12 @@ if (command === 'start') {
     );
     if (titleGiven)
       assert.equal(previous.title, title, 'Existing work has another title');
+    if (modeGiven)
+      assert.equal(
+        productionMode(read(relative(file))),
+        mode,
+        'Existing work uses another mode; use stage-review mode to switch',
+      );
     if (rendererGiven)
       assert.equal(
         previous.renderer || 'Codex built-in image_gen',
@@ -139,12 +150,15 @@ if (command === 'start') {
         path.resolve(source),
         '--renderer',
         renderer,
+        '--mode',
+        mode,
       ]),
     );
     // new-work copies the original verbatim; normalize BOM consistently for resume hashes.
     fs.writeFileSync(path.join(base, 'source', 'original.txt'), text);
     const request = {
       version: 1,
+      productionMode: mode,
       config: file,
       sourceFile: `works/${slug}/source/original.txt`,
       sourceHash,
@@ -399,6 +413,6 @@ if (command === 'start') {
   console.log('Completed: ' + file);
 } else if (command === 'help')
   console.log(
-    'Automatic production: cli/auto.mjs start ORIGINAL.txt [--title TITLE] [--renderer NAME] | status | finish\nstart prepares the request; the declared renderer runs image generation and visual inspection. Node alone cannot invoke a chat image tool.',
+    'Automatic production: cli/auto.mjs start ORIGINAL.txt [--title TITLE] [--renderer NAME] [--mode quality|economy] | status | finish\nstart prepares the request; the declared renderer runs image generation and visual inspection. Node alone cannot invoke a chat image tool.',
   );
 else throw new Error('Unknown automatic-production command');

@@ -8,18 +8,30 @@ const [slug, title, ...rest] = process.argv.slice(2);
 assert.match(slug || '', /^[a-z][a-z0-9-]{0,63}$/, 'Use a lowercase work ID');
 assert.ok(
   title && !title.startsWith('--'),
-  'Usage: node cli/new-work.mjs WORK-ID TITLE [SOURCE-TEXT-FILE] [--renderer NAME]',
+  'Usage: node cli/new-work.mjs WORK-ID TITLE [SOURCE-TEXT-FILE] [--renderer NAME] [--mode quality|economy]',
 );
 const source = rest[0] && !rest[0].startsWith('--') ? rest[0] : undefined;
 const flagArgs = rest.slice(source ? 1 : 0);
 let renderer = null;
+let mode = 'quality';
 for (let i = 0; i < flagArgs.length; i++) {
-  assert.equal(flagArgs[i], '--renderer', 'Unknown option: ' + flagArgs[i]);
+  assert.ok(
+    ['--renderer', '--mode'].includes(flagArgs[i]),
+    'Unknown option: ' + flagArgs[i],
+  );
   assert.ok(
     flagArgs[i + 1] !== undefined && !flagArgs[i + 1].startsWith('--'),
-    'Missing value: --renderer',
+    'Missing value: ' + flagArgs[i],
   );
-  renderer = flagArgs[++i];
+  const flag = flagArgs[i];
+  const value = flagArgs[++i];
+  if (flag === '--mode') {
+    assert.ok(
+      ['quality', 'economy'].includes(value),
+      'Use --mode quality or economy',
+    );
+    mode = value;
+  } else renderer = value;
 }
 const base = 'works/' + slug;
 assert.ok(
@@ -30,6 +42,8 @@ const original = source
   ? fs.readFileSync(path.resolve(source), 'utf8')
   : 'ここに原作本文を保存してください。';
 const config = {
+  productionMode: mode,
+  reviewPolicy: { version: 3 },
   version: 7,
   quality: structuredClone(defaultQuality),
   ...(renderer ? { generation: { renderer } } : {}),
@@ -121,6 +135,7 @@ config.version = 8;
 Object.assign(config, {
   promptPolicy: { version: 2 },
   productionReview: {
+    designSealRequired: true,
     readingProtocol: 'two-phase-v1',
     required: true,
     reviewer: 'subagent',

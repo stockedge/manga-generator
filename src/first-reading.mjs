@@ -2,6 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
+import {
+  scopedReview,
+  reviewContext,
+  decisionContext,
+} from './review-context.mjs';
 
 const hash = (value) => crypto.createHash('sha256').update(value).digest('hex');
 export const twoPhaseReading = (c, stage) =>
@@ -48,14 +53,29 @@ export function firstReadingRequest(root, c, stage, target = 'all') {
     };
   });
   // Bind to the current plan without supplying its script or intended order.
+  const scoped = scopedReview(c, stage)
+    ? reviewContext(c, stage, target)
+    : null;
   const contextHash = hash(
-    JSON.stringify({
-      pages,
-      cast: c.cast,
-      sections: c.sections,
-      style: c.style,
-      continuity: c.continuity,
-    }) + fs.readFileSync(resolve(root, c.sourceFile)),
+    JSON.stringify(
+      scoped
+        ? {
+            pages: scoped.pages,
+            boundaryContext: scoped.boundaryContext,
+            cast: scoped.cast,
+            sections: scoped.sections,
+            style: c.style,
+            continuity: c.continuity,
+            decisions: decisionContext(c, scoped),
+          }
+        : {
+            pages,
+            cast: c.cast,
+            sections: c.sections,
+            style: c.style,
+            continuity: c.continuity,
+          },
+    ) + fs.readFileSync(resolve(root, c.sourceFile)),
   );
   const base = { stage, target, protocol: 'two-phase-v1', images, contextHash };
   return { ...base, fingerprint: hash(JSON.stringify(base)) };

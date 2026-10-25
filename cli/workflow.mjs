@@ -13,6 +13,7 @@ import {
   narrativePlan,
 } from '../src/reading-flow.mjs';
 import { requireReview } from '../src/stage-reviews.mjs';
+import { requireDesignSeal } from '../src/review-progress.mjs';
 import { renderStoryboardSketch } from '../src/storyboard-sketch.mjs';
 
 import {
@@ -831,6 +832,7 @@ if (command === 'layout') {
 } else if (command === 'status') {
   console.log(config.pages.map((p) => `${p.id}: ${status(p)}`).join('\n'));
 } else if (command === 'build') {
+  requireDesignSeal(root, config, configFile);
   requireReview(root, config, configFile, 'source');
   requireReview(root, config, configFile, 'script');
   for (const page of config.pages) {

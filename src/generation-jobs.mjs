@@ -5,6 +5,7 @@ import { box } from './lettering.mjs';
 import { qualityInstructions } from './quality.mjs';
 import { referenceInstructions } from './face-design.mjs';
 import { modernPrompts, referenceManifest, panelPrompt } from './prompts.mjs';
+import { decisionContext, reviewContext } from './review-context.mjs';
 export function createGenerationJobs({ config, local, stateFor, svg }) {
   const cast = config.cast,
     workflowDir = config.workflowDir || 'workflow',
@@ -74,6 +75,16 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
                 .join('\n'),
           )
           .join('\n');
+    }
+    if (config.productionDecisions?.length) {
+      const decisions = decisionContext(
+        config,
+        reviewContext(config, 'artwork', page.id),
+      );
+      if (decisions.length)
+        spec.prompt +=
+          '\nPRODUCTION DECISIONS (content constraints): ' +
+          JSON.stringify(decisions);
     }
     const fingerprint = hash(
       JSON.stringify(spec) +
@@ -169,7 +180,7 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
       fingerprint: hash(instructions + job(page).fingerprint),
     };
   }
-  function panelJob(page, p) {
+  function panelJobCore(page, p) {
     if (modernPrompts(config)) {
       const layout = `${workflowDir}/panels/page-${p.id}.png`;
       const state = stateFor(page, p);
@@ -235,6 +246,23 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
           fingerprint: hash(j.fingerprint + roles),
         }
       : j;
+  }
+  function panelJob(page, p) {
+    const j = panelJobCore(page, p);
+    if (!config.productionDecisions?.length) return j;
+    const decisions = decisionContext(
+      config,
+      reviewContext(config, 'artwork', p.id),
+    );
+    if (!decisions.length) return j;
+    const text =
+      '\nPRODUCTION DECISIONS (content constraints): ' +
+      JSON.stringify(decisions);
+    return {
+      ...j,
+      prompt: j.prompt + text,
+      fingerprint: hash(j.fingerprint + text),
+    };
   }
   return { prompt, job, panelJob, layoutReference };
 }

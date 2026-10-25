@@ -3,11 +3,24 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 import {
+  scopedReview,
+  scopedInputs,
+  decisionContext,
+} from './review-context.mjs';
+import {
   twoPhaseReading,
   loadFirstReading,
   validateFirstComparison,
 } from './first-reading.mjs';
 const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+export function productionMode(c) {
+  const mode = c.productionMode ?? 'quality';
+  assert.ok(
+    ['quality', 'economy'].includes(mode),
+    'Use productionMode quality or economy',
+  );
+  return mode;
+}
 export const reviewStages = [
   'source',
   'script',
@@ -38,10 +51,15 @@ export function reviewBoundaries(c, target = 'all') {
     );
 }
 export function reviewInputs(c, configFile, stage, target = 'all') {
+  const mode = productionMode(c);
   assert.ok(reviewStages.includes(stage), 'Unknown review stage');
+  if (scopedReview(c, stage))
+    return { ...scopedInputs(c, stage, target), configFile };
   const pages = selectedPages(c, target);
   assert.ok(pages.length, 'Unknown review target');
+  /** @type {Record<string, any>} */
   const base = { stage, target, sourceFile: c.sourceFile };
+  if (c.productionDecisions?.length) base.decisions = decisionContext(c);
   if (stage === 'script') {
     base.dialoguePolicy = 'source-dialogue-dependencies-v1';
     base.dialogueInstructions =
@@ -144,6 +162,58 @@ export function reviewInputs(c, configFile, stage, target = 'all') {
     if (stage === 'final')
       files.push(c.outputDir + '/reader.html', c.outputDir + '/pdf/manga.pdf');
   }
+  // Preserve legacy fingerprints when no mode was selected explicitly.
+  if (c.productionMode !== undefined) base.productionMode = mode;
+  if (
+    mode === 'economy' &&
+    ['storyboard', 'artwork', 'lettering'].includes(stage)
+  ) {
+    const context = [...pages, ...(base.boundaryContext || [])];
+    const actors = new Set();
+    const sections = new Set();
+    const explicit = new Set();
+    for (const page of context) {
+      if (page.section) sections.add(page.section);
+      for (const file of page.references || []) explicit.add(file);
+      for (const panel of page.panels) {
+        if (panel.section) sections.add(panel.section);
+        for (const id of Object.keys(panel.speakers || {})) actors.add(id);
+        for (const d of panel.dialogue || []) actors.add(d.speaker);
+        for (const id of Object.keys(panel.production?.hands || {}))
+          actors.add(id);
+        for (const file of panel.references || []) explicit.add(file);
+        for (const file of panel.state?.references || []) explicit.add(file);
+      }
+    }
+    // Shared or unclassified references remain: only unrelated dedicated face sheets are removed.
+    const keep = (file) => {
+      const owners = Object.entries(c.cast || {}).filter(
+        ([, a]) => a.faceDesign?.reference === file,
+      );
+      return (
+        c.referenceRoles?.[file] !== 'identity' ||
+        explicit.has(file) ||
+        !owners.length ||
+        owners.some(([id]) => actors.has(id)) ||
+        Object.values(c.sections || {}).some((s) =>
+          s.references?.includes(file),
+        )
+      );
+    };
+    base.script.cast = Object.fromEntries(
+      Object.entries(c.cast || {}).filter(([id]) => actors.has(id)),
+    );
+    base.script.sections = Object.fromEntries(
+      Object.entries(c.sections || {}).filter(([id]) => sections.has(id)),
+    );
+    base.inputPolicy = 'scoped-settings-v1';
+    return {
+      base,
+      files: [...new Set(files)].filter(keep),
+      optionalFiles: [...new Set(optionalFiles)],
+      configFile,
+    };
+  }
   // Configuration is embedded per target so unrelated page edits do not stale a
   // finished panel review. Every file the reviewer receives is hash-checked.
   return {
@@ -153,8 +223,87 @@ export function reviewInputs(c, configFile, stage, target = 'all') {
     configFile,
   };
 }
-export function captureReview(root, c, configFile, stage, target = 'all') {
+export function reviewMaterial(
+  root,
+  c,
+  configFile,
+  stage,
+  target = 'all',
+  sourceDocuments = null,
+) {
   const input = reviewInputs(c, configFile, stage, target);
+  const dependencyFiles = [];
+  if (scopedReview(c, stage)) {
+    const coverageFile = `${c.workflowDir}/source-coverage.json`;
+    for (const file of [c.sourceFile, coverageFile])
+      assert.ok(
+        path.resolve(root, file).startsWith(path.resolve(root) + path.sep),
+        'Source context escapes workspace',
+      );
+    const source = sourceDocuments
+      ? sourceDocuments.source
+      : fs.readFileSync(path.resolve(root, c.sourceFile), 'utf8');
+    const coverage = sourceDocuments
+      ? sourceDocuments.coverage
+      : fs.existsSync(path.resolve(root, coverageFile))
+        ? JSON.parse(fs.readFileSync(path.resolve(root, coverageFile), 'utf8'))
+        : null;
+    if (coverage) {
+      let end = 0;
+      const knownPanels = new Set(
+        c.pages.flatMap((page) => page.panels.map((panel) => panel.id)),
+      );
+      const valid =
+        coverage.sourceHash === hash(Buffer.from(source)) &&
+        Array.isArray(coverage.spans) &&
+        coverage.spans.every((s) => {
+          const okay =
+            Number.isInteger(s.start) &&
+            Number.isInteger(s.end) &&
+            s.start === end &&
+            s.end > s.start &&
+            s.end <= source.length &&
+            Array.isArray(s.panels) &&
+            s.panels.length &&
+            s.panels.every((id) => knownPanels.has(id));
+          end = s.end;
+          return okay;
+        }) &&
+        end === source.length;
+      const spans = valid
+        ? coverage.spans.filter((s) =>
+            s.panels.some((id) => input.base.contextPanels.includes(id)),
+          )
+        : [];
+      if (
+        spans.length &&
+        input.base.contextPanels.every((id) =>
+          spans.some((s) => s.panels.includes(id)),
+        )
+      ) {
+        input.base.sourceExcerpts = spans.map((s) => ({
+          start: s.start,
+          end: s.end,
+          text: source.slice(s.start, s.end),
+        }));
+        input.files = input.files.filter((file) => file !== c.sourceFile);
+        dependencyFiles.push(c.sourceFile, coverageFile);
+      } else
+        input.base.sourceFallback =
+          'Full source: coverage is incomplete, stale or missing context panels.';
+    } else input.base.sourceFallback = 'Full source: no source coverage map.';
+  }
+  return { ...input, dependencyFiles };
+}
+
+export function captureReview(root, c, configFile, stage, target = 'all') {
+  const { dependencyFiles, ...input } = reviewMaterial(
+    root,
+    c,
+    configFile,
+    stage,
+    target,
+  );
   if (twoPhaseReading(c, stage)) {
     const first = loadFirstReading(root, c, stage, target);
     Object.assign(input.base, {
@@ -182,7 +331,9 @@ export function captureReview(root, c, configFile, stage, target = 'all') {
   }
   const optional = new Set(input.optionalFiles);
   const entries = Object.fromEntries(
-    [...new Set([...input.files, ...input.optionalFiles])].map((name) => {
+    [
+      ...new Set([...input.files, ...input.optionalFiles, ...dependencyFiles]),
+    ].map((name) => {
       const file = path.resolve(root, name);
       assert.ok(
         file.startsWith(path.resolve(root) + path.sep),

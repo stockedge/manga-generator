@@ -13,11 +13,16 @@ try {
   copyRuntime(root, fixture, [
     'cli/auto.mjs',
     'cli/new-work.mjs',
+    'cli/stage-review.mjs',
+    'src/project.mjs',
     'src/quality.mjs',
     'src/prompts.mjs',
     'src/face-design.mjs',
     'src/state-history.mjs',
     'src/stage-reviews.mjs',
+    'src/review-context.mjs',
+    'src/review-progress.mjs',
+    'src/cli-output.mjs',
     'src/first-reading.mjs',
     'src/production-preflight.mjs',
     'src/lettering.mjs',
@@ -55,6 +60,47 @@ try {
   assert.match(run(['start', original]), /Resume:/);
   assert.deepEqual(fs.readFileSync(full), first, 'Resume overwrote script');
   assert.throws(() => run(['start', original, '--title', 'different']));
+  assert.equal(JSON.parse(first.toString('utf8')).productionMode, 'quality');
+  assert.throws(() => run(['start', original, '--mode', 'economy']));
+  assert.throws(() => run(['start', original, '--mode', 'invalid']));
+  const economySource = path.join(fixture, 'economy.txt');
+  fs.writeFileSync(economySource, text + '\n節約モードの別作品。');
+  assert.match(run(['start', economySource, '--mode', 'economy']), /Prepared:/);
+  const economySlug =
+    'auto-' + digest(fs.readFileSync(economySource)).slice(0, 12);
+  const economyFile = `works/${economySlug}/workflow.json`;
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(fixture, economyFile), 'utf8'))
+      .productionMode,
+    'economy',
+  );
+  assert.match(run(['start', economySource, '--mode', 'economy']), /Resume:/);
+  const switchMode = (...args) =>
+    execFileSync(
+      process.execPath,
+      [path.join(fixture, 'cli/stage-review.mjs'), 'mode', ...args],
+      {
+        cwd: fixture,
+        env: { ...process.env, MANGA_PROJECT: economyFile },
+        encoding: 'utf8',
+        stdio: 'pipe',
+        windowsHide: true,
+      },
+    );
+  assert.throws(() => switchMode());
+  assert.throws(() => switchMode('invalid'));
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(fixture, economyFile), 'utf8'))
+      .productionMode,
+    'economy',
+  );
+  assert.match(switchMode('quality'), /Production mode: quality/);
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(fixture, economyFile), 'utf8'))
+      .productionMode,
+    'quality',
+  );
+  assert.match(run(['start', economySource, '--mode', 'quality']), /Resume:/);
   const empty = path.join(fixture, 'empty.txt');
   fs.writeFileSync(empty, ' ');
   assert.throws(() => run(['start', empty]));

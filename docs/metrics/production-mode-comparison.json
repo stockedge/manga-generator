@@ -1,0 +1,1849 @@
+{
+  "measuredAt": "2026-10-25T17:20:24.417Z",
+  "workCount": 26,
+  "measurement": "Deterministic planned review input sizes, not billed tokens or a new manga production run",
+  "assumptions": [
+    "Each source/script/final review once, artwork per panel, storyboard/lettering per page.",
+    "Same current works, source and saved files for all modes; no production files modified.",
+    "Image-only first readings, their responses, generation, reasoning, output, cache and repair retries are excluded.",
+    "Other text counts JSON inputs only; raw SVG/HTML markup and embedded binary data are excluded.",
+    "Unavailable image paths are counted separately from available inputs.",
+    "Simulated edit compares request material, not a claim that a reviewer ran."
+  ],
+  "totals": {
+    "quality": {
+      "scriptAndSourceCharacters": 107775526,
+      "otherTextCharacters": 2834221,
+      "imageInputs": 18585,
+      "availableImageInputs": 8877,
+      "pdfInputs": 26,
+      "fullSourceFallbacks": 0,
+      "reviewCalls": 2254
+    },
+    "previousEconomy": {
+      "scriptAndSourceCharacters": 90849864,
+      "otherTextCharacters": 2834221,
+      "imageInputs": 18585,
+      "availableImageInputs": 8877,
+      "pdfInputs": 26,
+      "fullSourceFallbacks": 0,
+      "reviewCalls": 2254
+    },
+    "economy": {
+      "scriptAndSourceCharacters": 61593162,
+      "otherTextCharacters": 2834221,
+      "imageInputs": 18421,
+      "availableImageInputs": 9276,
+      "pdfInputs": 26,
+      "fullSourceFallbacks": 1426,
+      "reviewCalls": 2254
+    }
+  },
+  "simulatedDialogueEdits": {
+    "quality": 229,
+    "previousEconomy": 229,
+    "economy": 181
+  },
+  "reductions": {
+    "comparableScriptAndSourcePct": 42.85,
+    "previousEconomyScriptAndSourcePct": 15.7,
+    "jsonAndSourceTextPct": 41.75,
+    "imageInputCountPct": 0.88
+  },
+  "rows": [
+    {
+      "work": "auto-02263fe93741",
+      "pages": 37,
+      "panels": 166,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 7166217,
+          "otherTextCharacters": 236288,
+          "imageInputs": 2654,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 243
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 4868377,
+          "otherTextCharacters": 236288,
+          "imageInputs": 2654,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 243
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 3860180,
+          "otherTextCharacters": 236288,
+          "imageInputs": 2604,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 240,
+          "reviewCalls": 243
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "17-2",
+          "affectedReviews": 13,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 5,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "17-2",
+          "affectedReviews": 13,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 5,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "17-2",
+          "affectedReviews": 7,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 3,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-05f3e0f63223",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 48861,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 48825,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 49491,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-079c2af9c136",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 51559,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 51523,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 52189,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-157aee8acc07",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 53531,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 53495,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 54161,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-1be1a7ae744e",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 55046,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 55010,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 55676,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-22f238b90eda",
+      "pages": 27,
+      "panels": 96,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 3135260,
+          "otherTextCharacters": 151213,
+          "imageInputs": 882,
+          "availableImageInputs": 882,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 153
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 2577921,
+          "otherTextCharacters": 151213,
+          "imageInputs": 882,
+          "availableImageInputs": 882,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 153
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 1442161,
+          "otherTextCharacters": 151213,
+          "imageInputs": 869,
+          "availableImageInputs": 869,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 153
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "07-r1",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "07-r1",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "07-r1",
+          "affectedReviews": 9,
+          "stages": {
+            "script": 1,
+            "storyboard": 2,
+            "artwork": 3,
+            "lettering": 2,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-246425edb533",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 51017,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 50981,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 51647,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-291f34e4538e",
+      "pages": 32,
+      "panels": 119,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 3472702,
+          "otherTextCharacters": 174797,
+          "imageInputs": 1635,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 186
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 2994702,
+          "otherTextCharacters": 174797,
+          "imageInputs": 1635,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 186
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 1608042,
+          "otherTextCharacters": 174797,
+          "imageInputs": 1614,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 8,
+          "reviewCalls": 186
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "16-2",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "16-2",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "16-2",
+          "affectedReviews": 7,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 3,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-4846aa6d608d",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 83274,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 83238,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 83904,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-4ae20c1959d4",
+      "pages": 18,
+      "panels": 49,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 2283069,
+          "otherTextCharacters": 92525,
+          "imageInputs": 569,
+          "availableImageInputs": 569,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 88
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 1931371,
+          "otherTextCharacters": 92525,
+          "imageInputs": 569,
+          "availableImageInputs": 569,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 88
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 1312251,
+          "otherTextCharacters": 92525,
+          "imageInputs": 581,
+          "availableImageInputs": 581,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 88
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "09-1",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "09-1",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "09-1",
+          "affectedReviews": 9,
+          "stages": {
+            "script": 1,
+            "storyboard": 2,
+            "artwork": 3,
+            "lettering": 2,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-5c5f4db0e7f1",
+      "pages": 23,
+      "panels": 93,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 15610112,
+          "otherTextCharacters": 286033,
+          "imageInputs": 1807,
+          "availableImageInputs": 1644,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 142
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 14051372,
+          "otherTextCharacters": 286033,
+          "imageInputs": 1807,
+          "availableImageInputs": 1644,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 142
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 9398136,
+          "otherTextCharacters": 286033,
+          "imageInputs": 1787,
+          "availableImageInputs": 1649,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 139,
+          "reviewCalls": 142
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "12-2",
+          "affectedReviews": 12,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 4,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "12-2",
+          "affectedReviews": 12,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 4,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "12-2",
+          "affectedReviews": 7,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 3,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-6d60489442af",
+      "pages": 27,
+      "panels": 93,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 4815380,
+          "otherTextCharacters": 189424,
+          "imageInputs": 1008,
+          "availableImageInputs": 533,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 150
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 4335341,
+          "otherTextCharacters": 189424,
+          "imageInputs": 1008,
+          "availableImageInputs": 533,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 150
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 3465119,
+          "otherTextCharacters": 189424,
+          "imageInputs": 999,
+          "availableImageInputs": 609,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 147,
+          "reviewCalls": 150
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "repair-08-2-1",
+          "affectedReviews": 10,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 2,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "repair-08-2-1",
+          "affectedReviews": 10,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 2,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "repair-08-2-1",
+          "affectedReviews": 9,
+          "stages": {
+            "script": 1,
+            "storyboard": 2,
+            "artwork": 3,
+            "lettering": 2,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-6decfca95125",
+      "pages": 40,
+      "panels": 172,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 13170593,
+          "otherTextCharacters": 262081,
+          "imageInputs": 2527,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 255
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 7150044,
+          "otherTextCharacters": 262081,
+          "imageInputs": 2527,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 255
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 5571883,
+          "otherTextCharacters": 262081,
+          "imageInputs": 2480,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 252,
+          "reviewCalls": 255
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "20-3",
+          "affectedReviews": 13,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 5,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "20-3",
+          "affectedReviews": 13,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 5,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "20-3",
+          "affectedReviews": 7,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 3,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-73cd5f48f9d2",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 68370,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 68334,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 69000,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-7d2a48bd0847",
+      "pages": 22,
+      "panels": 81,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 5894400,
+          "otherTextCharacters": 202196,
+          "imageInputs": 736,
+          "availableImageInputs": 323,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 128
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 5561713,
+          "otherTextCharacters": 202196,
+          "imageInputs": 736,
+          "availableImageInputs": 323,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 128
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 4056668,
+          "otherTextCharacters": 202196,
+          "imageInputs": 724,
+          "availableImageInputs": 386,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 125,
+          "reviewCalls": 128
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "d2-09-2-2",
+          "affectedReviews": 12,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 4,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "d2-09-2-2",
+          "affectedReviews": 12,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 4,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "d2-09-2-2",
+          "affectedReviews": 7,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 3,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-8dd8c9b809cd",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 46564,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 46528,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 47194,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-97233471c428",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 55548,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 55512,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 56178,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-a2f05a9a0326",
+      "pages": 24,
+      "panels": 91,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 8481559,
+          "otherTextCharacters": 220710,
+          "imageInputs": 1943,
+          "availableImageInputs": 1415,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 142
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 6888098,
+          "otherTextCharacters": 220710,
+          "imageInputs": 1943,
+          "availableImageInputs": 1415,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 142
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 4993538,
+          "otherTextCharacters": 220710,
+          "imageInputs": 1926,
+          "availableImageInputs": 1484,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 139,
+          "reviewCalls": 142
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "13-3",
+          "affectedReviews": 12,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 4,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "13-3",
+          "affectedReviews": 12,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 4,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "13-3",
+          "affectedReviews": 7,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 3,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-a576e702f902",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 51659,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 51623,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 52289,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-b48926317c14",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 54195,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 54159,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 54825,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-bc214cdca2b9",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 53252,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 53216,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 53882,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-c136dc54617b",
+      "pages": 38,
+      "panels": 147,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 13267758,
+          "otherTextCharacters": 360946,
+          "imageInputs": 1102,
+          "availableImageInputs": 873,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 226
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 12200641,
+          "otherTextCharacters": 360946,
+          "imageInputs": 1102,
+          "availableImageInputs": 873,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 226
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 7421574,
+          "otherTextCharacters": 360946,
+          "imageInputs": 1072,
+          "availableImageInputs": 878,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 226
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "v5-18-3",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "v5-18-3",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "v5-18-3",
+          "affectedReviews": 9,
+          "stages": {
+            "script": 1,
+            "storyboard": 2,
+            "artwork": 3,
+            "lettering": 2,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-cc60964f916f",
+      "pages": 1,
+      "panels": 2,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 52294,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 52258,
+          "otherTextCharacters": 0,
+          "imageInputs": 13,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 7
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 52924,
+          "otherTextCharacters": 0,
+          "imageInputs": 14,
+          "availableImageInputs": 0,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 4,
+          "reviewCalls": 7
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "01-2",
+          "affectedReviews": 6,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 2,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-cf914a41809e",
+      "pages": 26,
+      "panels": 128,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 19956105,
+          "otherTextCharacters": 329328,
+          "imageInputs": 2000,
+          "availableImageInputs": 1614,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 183
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 18992909,
+          "otherTextCharacters": 329328,
+          "imageInputs": 2000,
+          "availableImageInputs": 1614,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 183
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 11681991,
+          "otherTextCharacters": 329328,
+          "imageInputs": 1955,
+          "availableImageInputs": 1633,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 180,
+          "reviewCalls": 183
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "13-5",
+          "affectedReviews": 13,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 5,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "13-5",
+          "affectedReviews": 13,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 5,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "13-5",
+          "affectedReviews": 9,
+          "stages": {
+            "script": 1,
+            "storyboard": 2,
+            "artwork": 3,
+            "lettering": 2,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "auto-fe5d90d8e64a",
+      "pages": 24,
+      "panels": 69,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 3644258,
+          "otherTextCharacters": 127218,
+          "imageInputs": 553,
+          "availableImageInputs": 553,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 120
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 2931523,
+          "otherTextCharacters": 127218,
+          "imageInputs": 553,
+          "availableImageInputs": 553,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 120
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 1932423,
+          "otherTextCharacters": 127218,
+          "imageInputs": 647,
+          "availableImageInputs": 647,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 120
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "14-3",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "14-3",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "14-3",
+          "affectedReviews": 9,
+          "stages": {
+            "script": 1,
+            "storyboard": 2,
+            "artwork": 3,
+            "lettering": 2,
+            "final": 1
+          }
+        }
+      }
+    },
+    {
+      "work": "kensei",
+      "pages": 24,
+      "panels": 96,
+      "modes": {
+        "quality": {
+          "scriptAndSourceCharacters": 6152943,
+          "otherTextCharacters": 201462,
+          "imageInputs": 1000,
+          "availableImageInputs": 471,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 147
+        },
+        "previousEconomy": {
+          "scriptAndSourceCharacters": 5641150,
+          "otherTextCharacters": 201462,
+          "imageInputs": 1000,
+          "availableImageInputs": 471,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 0,
+          "reviewCalls": 147
+        },
+        "economy": {
+          "scriptAndSourceCharacters": 4115836,
+          "otherTextCharacters": 201462,
+          "imageInputs": 981,
+          "availableImageInputs": 540,
+          "pdfInputs": 1,
+          "fullSourceFallbacks": 144,
+          "reviewCalls": 147
+        }
+      },
+      "simulatedDialogueEdit": {
+        "quality": {
+          "panel": "12-2",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "previousEconomy": {
+          "panel": "12-2",
+          "affectedReviews": 11,
+          "stages": {
+            "script": 1,
+            "storyboard": 3,
+            "artwork": 3,
+            "lettering": 3,
+            "final": 1
+          }
+        },
+        "economy": {
+          "panel": "12-2",
+          "affectedReviews": 7,
+          "stages": {
+            "script": 1,
+            "storyboard": 1,
+            "artwork": 3,
+            "lettering": 1,
+            "final": 1
+          }
+        }
+      }
+    }
+  ]
+}

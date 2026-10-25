@@ -1,0 +1,55 @@
+{
+  "work": "works/auto-7d2a48bd0847/workflow.json",
+  "panel": "d2-01-1-1",
+  "stage": "artwork",
+  "kind": "Actual paired isolated reviewer runs on the same saved panel; no production acceptance or review record is changed",
+  "order": [
+    "quality",
+    "economy"
+  ],
+  "limitations": [
+    "One sample, one run per mode; output and reasoning vary.",
+    "Cache warmth may differ; input and cached tokens are reported separately.",
+    "This excludes script, generation, lettering, final review, repairs and other production stages."
+  ],
+  "runs": [
+    {
+      "mode": "quality",
+      "startedAt": "2026-10-25T17:22:39.199Z",
+      "completedAt": "2026-10-25T17:23:22.838Z",
+      "promptCharacters": 23806,
+      "imageCount": 3,
+      "responseStatus": "changes-requested",
+      "usage": {
+        "input_tokens": 41506,
+        "cached_input_tokens": 13440,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 444,
+        "reasoning_output_tokens": 32
+      },
+      "usageMeasured": true,
+      "response": "tmp/review-comparison-b7550b7b-71a7-4154-a968-b6becff6c72c/review-runs/isolated-45693dd3-daff-4339-a60a-5690ed6a43c4/response.json",
+      "log": "tmp/review-comparison-b7550b7b-71a7-4154-a968-b6becff6c72c/review-runs/isolated-45693dd3-daff-4339-a60a-5690ed6a43c4/execution.json"
+    },
+    {
+      "mode": "economy",
+      "startedAt": "2026-10-25T17:23:23.058Z",
+      "completedAt": "2026-10-25T17:24:27.512Z",
+      "promptCharacters": 14239,
+      "imageCount": 4,
+      "responseStatus": "changes-requested",
+      "usage": {
+        "input_tokens": 39428,
+        "cached_input_tokens": 13440,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 552,
+        "reasoning_output_tokens": 76
+      },
+      "usageMeasured": true,
+      "response": "tmp/review-comparison-b7550b7b-71a7-4154-a968-b6becff6c72c/review-runs/isolated-782bc79b-0b75-4d9a-be6a-28e07f99d4fc/response.json",
+      "log": "tmp/review-comparison-b7550b7b-71a7-4154-a968-b6becff6c72c/review-runs/isolated-782bc79b-0b75-4d9a-be6a-28e07f99d4fc/execution.json"
+    }
+  ],
+  "inputReductionPct": 5.006505083602371,
+  "inputAndOutputReductionPct": 4.696066746126341
+}
