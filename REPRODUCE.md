@@ -172,6 +172,14 @@ Node.js 24、WindowsのMeiryoとChrome/Edgeで検証。別作品の持ち運び�
 
 通常の bundle は未圧縮のフォルダーへコピーし、そのフォルダーで全ページを再構築する。空き容量が少ない場合は `node cli/reproduce.mjs bundle --compressed` で `.tar.gz` を保存できる。圧縮版はストリーム処理で作成し、内部の全ファイルをロックのSHA-256と照合する。Node.js標準ライブラリだけで作成できる。任意の空きのある場所へ `tar -xzf パッケージ.tar.gz -C 展開先` で展開し、ルートで MANGA_PROJECT を設定して `node cli/reproduce.mjs` を実行する。展開時には未圧縮の一式と再構築用の空き容量が必要。
 
+### 容量を抑える保存と一時領域
+
+新しい履歴の世代一覧は `.manga-history/states/<作品ID>/*.json.gz` に圧縮保存する。旧 `.json` も一覧・復元・履歴bundleで読める。既存分は、MANGA_PROJECTを明示して `node cli/history.mjs compress` で移行できる。全作品分は `node cli/history.mjs compress-all`。旧バージョンの制作コマンドを終了してから実行する。1ファイルずつ状態ハッシュと復号後の元バイト列を検証し、圧縮版を保存してから旧JSONを除く。中断後は同じコマンドを再実行できる。画像の保管実体・世代・復元内容は削減しない。statusとworkflow check、reproduce checkは履歴走査を起動しない。
+
+新しい通常の `freeze` は配布用として、素材の `history/` と `candidates/` を一括収録しない。ただしジョブが直接参照する素材は残す。原作・採用素材・参照・配置・検品記録・生成指示・完成物は保持する。候補と旧素材を含む制作パッケージが必要なら `node cli/reproduce.mjs freeze --full-history` の後で `bundle --compressed` を使う。全世代の復元用アーカイブは別途 `node cli/history.mjs bundle 新規保存先.tar.gz` で保存する。既存ロックの入力範囲と確定済みreleaseは変更せず、新しい固定・パッケージから適用する。
+
+ブラウザと独立したテストfixtureは、Windowsでは `%LOCALAPPDATA%/manga-generator/cache`、その他はOSの一時領域に保存する。変更先は `MANGA_CACHE_DIR` で指定できる。テスト終了時に掃除し、失敗時の調査用に保持する場合は `MANGA_KEEP_TEST_TMP=1` を指定する。`node cli/cleanup.mjs` は24時間以上経過した、この仕組みで所有記録を作成した残骸だけを回収する（生成時にも実施）。実行中の所有者・ブラウザ、リンク、所有記録の不明なディレクトリは残す。従来のリポジトリ内 `tmp` は作品コピーを含み得るため自動削除しない。作業場や履歴を同期対象にする場合、ハッシュ確認によってオンライン専用ファイルが再取得され得る。
+
 再生成できる workflow/review の合成プレビューと workflow/quality の倍率別確認PNGは、パッケージの入力から除く。元の素材、位置情報、検品記録、生成・修正指示は保存し、完成PNG・SVG・HTMLは含める。検品用の画面とPNGは quality-plan と export で作り直せる。
 
 ## 原作URLと生成実行の保存

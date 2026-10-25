@@ -84,7 +84,13 @@ if (command === 'freeze') {
     ...files('docs'),
     ...refs,
     ...actualRefs,
-    ...files(config.assetDir || 'assets/v2'),
+    ...files(config.assetDir || 'assets/v2').filter(
+      (file) =>
+        process.argv.includes('--full-history') ||
+        !/\/(?:history|candidates)\//.test(
+          file.slice((config.assetDir || 'assets/v2').length),
+        ),
+    ),
     ...productionFiles,
   ];
   const outputs = files(output).filter((f) => /\.(svg|html|png|pdf)$/.test(f));
@@ -93,6 +99,9 @@ if (command === 'freeze') {
     JSON.stringify(
       {
         version: 1,
+        packageScope: process.argv.includes('--full-history')
+          ? 'production'
+          : 'distribution',
         node: process.version,
         platform: process.platform,
         config: configFile,

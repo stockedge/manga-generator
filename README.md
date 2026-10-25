@@ -55,6 +55,8 @@
 - [開発者向けフォルダー構成](docs/PROJECT-LAYOUT.md)
 - [GitHubでの利用状況と計測方法](docs/GITHUB-ADOPTION.md)
 
+容量対策として、制作履歴の世代一覧はgzipで保存し、ブラウザ・テスト用キャッシュはWindowsのローカル一時領域へ置きます。既存履歴の圧縮、残骸回収、配布用と制作履歴用パッケージの使い分けは[保存と一時領域](REPRODUCE.md#容量を抑える保存と一時領域)を参照してください。
+
 ## Claude Codeで使う
 
 [Claude Code向け導入・制作手順](docs/CLAUDE-CODE.md)と[ComfyUI構築手順](docs/COMFYUI.md)を用意しています。画像生成は外部ComfyUI、視覚確認と独立レビューはClaude Code、組版・PDF・履歴・再現は共通CLIが担当します。GPU環境は別途必要です。

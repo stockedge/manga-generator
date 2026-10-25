@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node cli/workflow.mjs build && node cli/export.mjs current",
-    "check": "node cli/workflow.mjs check && node tests/verify-general.mjs && node tests/verify-archive.mjs && node tests/verify-face.mjs && node tests/verify-auto.mjs && node tests/verify-state-history.mjs && node tests/verify-layout.mjs && node tests/verify-prompts.mjs && node tests/verify-refactor.mjs && node tests/verify-production-preflight.mjs",
+    "check": "node cli/workflow.mjs check && node tests/verify-general.mjs && node tests/verify-archive.mjs && node tests/verify-temporary.mjs && node tests/verify-face.mjs && node tests/verify-auto.mjs && node tests/verify-state-history.mjs && node tests/verify-layout.mjs && node tests/verify-prompts.mjs && node tests/verify-refactor.mjs && node tests/verify-production-preflight.mjs",
     "prompts": "node cli/manga.mjs prompts",
     "export": "node cli/export.mjs",
     "workflow:plan": "node cli/workflow.mjs plan && node cli/export.mjs storyboards",

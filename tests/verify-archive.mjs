@@ -1,21 +1,19 @@
+import { createTemporary } from '../src/temporary.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
 import { pack, inspect } from '../src/archive.mjs';
-const root = process.cwd();
-fs.mkdirSync(path.join(root, 'tmp'), { recursive: true });
-const folder = fs.mkdtempSync(path.join(root, 'tmp', 'archive-'));
+const previous = process.cwd();
+const temporary = createTemporary('test');
+const folder = temporary.folder;
+const root = folder;
+process.chdir(root);
 try {
-  const long =
-    path.relative(root, folder).replaceAll('\\', '/') +
-    '/nested/' +
-    'x'.repeat(90) +
-    '.txt';
+  const long = 'data' + '/nested/' + 'x'.repeat(90) + '.txt';
   fs.mkdirSync(path.dirname(long), { recursive: true });
   fs.writeFileSync(long, '日本語とUTF-8の保存\n');
-  const empty =
-    path.relative(root, folder).replaceAll('\\', '/') + '/empty.txt';
+  const empty = 'data' + '/empty.txt';
   fs.writeFileSync(empty, '');
   const entries = Object.fromEntries(
     [long, empty].map((f) => [
@@ -41,6 +39,6 @@ try {
     'PASS: streaming portable archive, UTF-8, long paths, empty files, preserved releases, corrupt/truncated archive rejection',
   );
 } finally {
-  assert.ok(folder.startsWith(path.join(root, 'tmp', 'archive-')));
-  fs.rmSync(folder, { recursive: true, force: true });
+  process.chdir(previous);
+  temporary.cleanup();
 }

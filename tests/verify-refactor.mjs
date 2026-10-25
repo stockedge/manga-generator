@@ -1,10 +1,12 @@
+import { createTemporary } from '../src/temporary.mjs';
+import { copyRuntime } from './support.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { root } from '../src/workspace.mjs';
-import { loadProject, local } from '../src/project.mjs';
+import { local } from '../src/project.mjs';
 import {
   columns,
   speechColumns,
@@ -124,23 +126,35 @@ execFileSync(
     windowsHide: true,
   },
 );
-fs.mkdirSync(path.join(root, 'tmp'), { recursive: true });
-const folder = fs.mkdtempSync(path.join(root, 'tmp', 'project-load-'));
-fs.writeFileSync(path.join(folder, 'workflow.json'), '{}');
-const selected = path
-  .relative(root, path.join(folder, 'workflow.json'))
-  .replaceAll('\\', '/');
-assert.deepEqual(loadProject(selected).config, {});
-assert.equal(loadProject(selected).configFile, selected);
+const temporary = createTemporary('test');
+const folder = temporary.folder;
+try {
+  fs.writeFileSync(path.join(folder, 'workflow.json'), '{}');
+  copyRuntime(root, folder);
+  const projectURL = pathToFileURL(path.join(folder, 'src/project.mjs')).href;
+  execFileSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      'import assert from "node:assert/strict"; import { loadProject } from ' +
+        JSON.stringify(projectURL) +
+        '; assert.deepEqual(loadProject("workflow.json").config, {}); assert.equal(loadProject("workflow.json").configFile,"workflow.json");',
+    ],
+    { windowsHide: true },
+  );
 
-// Recorded from the pre-extraction runtime; never refresh from the implementation under test.
-const expected = JSON.parse(
-  fs.readFileSync(
-    path.join(root, 'tests/fixtures/workflow-refactor.json'),
-    'utf8',
-  ),
-);
-assert.deepEqual(captureWorkflow(root, path.join(root, 'tmp')), expected);
+  // Recorded from the pre-extraction runtime; never refresh from the implementation under test.
+  const expected = JSON.parse(
+    fs.readFileSync(
+      path.join(root, 'tests/fixtures/workflow-refactor.json'),
+      'utf8',
+    ),
+  );
+  assert.deepEqual(captureWorkflow(root), expected);
+} finally {
+  temporary.cleanup();
+}
 console.log(
   'PASS: pure lettering/layout, validated shared story state, explicit project loading, pre-refactor SVG/HTML/jobs/fingerprints/layout parity in four modes',
 );

@@ -4,13 +4,32 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { checkpoint, listStates, extractState } from '../src/state-history.mjs';
+import {
+  checkpoint,
+  listStates,
+  extractState,
+  stateFile,
+  readState,
+  compressStates,
+} from '../src/state-history.mjs';
 import { pack } from '../src/archive.mjs';
 import { root } from '../src/workspace.mjs';
 const [mode, arg, ...rest] = process.argv.slice(2);
 const selected = process.env.MANGA_PROJECT;
 const work = selected && path.dirname(path.resolve(root, selected));
-if (mode === 'checkpoint-all') {
+if (mode === 'compress-all') {
+  const states = path.join(root, '.manga-history', 'states');
+  const total = { files: 0, before: 0, after: 0 };
+  if (fs.existsSync(states))
+    for (const item of fs.readdirSync(states, { withFileTypes: true })) {
+      assert.ok(!item.isSymbolicLink(), 'Refuse redirected history');
+      if (!item.isDirectory()) continue;
+      const result = compressStates(root, path.join(root, 'works', item.name));
+      for (const key of Object.keys(total)) total[key] += result[key];
+      console.log(JSON.stringify({ work: item.name, ...result }));
+    }
+  console.log(JSON.stringify({ total }));
+} else if (mode === 'checkpoint-all') {
   for (const item of fs.readdirSync(path.join(root, 'works'), {
     withFileTypes: true,
   }))
@@ -31,6 +50,8 @@ if (mode === 'checkpoint-all') {
     console.log(
       JSON.stringify(checkpoint(root, work, arg || 'manual'), null, 2),
     );
+  else if (mode === 'compress')
+    console.log(JSON.stringify(compressStates(root, work), null, 2));
   else if (mode === 'list')
     console.log(JSON.stringify(listStates(root, work), null, 2));
   else if (mode === 'extract') {
@@ -53,12 +74,6 @@ if (mode === 'checkpoint-all') {
   } else if (mode === 'bundle') {
     assert.ok(arg, 'Use bundle NEW_ARCHIVE.tar.gz');
     checkpoint(root, work, 'history export');
-    const folder = path.join(
-      root,
-      '.manga-history',
-      'states',
-      path.basename(work),
-    );
     const entries = {};
     const add = (file) => {
       const name = path.relative(root, file).replaceAll('\\', '/');
@@ -68,9 +83,9 @@ if (mode === 'checkpoint-all') {
         .digest('hex');
     };
     for (const state of listStates(root, work)) {
-      const file = path.join(folder, state.id + '.json');
+      const file = stateFile(root, work, state.id);
       add(file);
-      const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const manifest = readState(file);
       for (const item of Object.values(manifest.entries))
         add(
           path.join(
@@ -89,6 +104,6 @@ if (mode === 'checkpoint-all') {
     console.log('Saved portable intermediate history: ' + path.resolve(arg));
   } else
     throw new Error(
-      'Use checkpoint [LABEL] | checkpoint-all [LABEL] | list | extract ID NEW_DIRECTORY | run EXECUTABLE [ARGS...] | bundle NEW_ARCHIVE.tar.gz',
+      'Use checkpoint [LABEL] | checkpoint-all [LABEL] | compress | compress-all | list | extract ID NEW_DIRECTORY | run EXECUTABLE [ARGS...] | bundle NEW_ARCHIVE.tar.gz',
     );
 }

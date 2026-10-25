@@ -1,3 +1,5 @@
+import { createTemporary } from '../src/temporary.mjs';
+import { gunzipSync } from 'node:zlib';
 import { copyRuntime } from './support.mjs';
 import { root as workspaceRoot } from '../src/workspace.mjs';
 import fs from 'node:fs';
@@ -5,7 +7,13 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { checkpoint, listStates, extractState } from '../src/state-history.mjs';
+import {
+  checkpoint,
+  listStates,
+  extractState,
+  compressStates,
+  readState,
+} from '../src/state-history.mjs';
 import {
   readingFlow,
   flowOverlay,
@@ -17,9 +25,8 @@ import {
   validateReadingReview,
   validateDialogueReview,
 } from '../src/stage-reviews.mjs';
-const base = path.resolve('tmp');
-fs.mkdirSync(base, { recursive: true });
-const root = fs.mkdtempSync(path.join(base, 'state-history-test-'));
+const temporary = createTemporary('test');
+const root = temporary.folder;
 try {
   const work = path.join(root, 'works', 'example');
   fs.mkdirSync(path.join(work, 'assets'), { recursive: true });
@@ -100,9 +107,34 @@ try {
     '.manga-history',
     'states',
     'example',
-    first.id + '.json',
+    first.id + '.json.gz',
   );
-  const original = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+  const originalBytes = gunzipSync(fs.readFileSync(manifestFile));
+  const original = readState(manifestFile);
+  const legacy = manifestFile.slice(0, -3);
+  fs.writeFileSync(legacy, originalBytes);
+  assert.equal(listStates(root, work).length, 1);
+  fs.writeFileSync(manifestFile, 'broken gzip');
+  assert.throws(() => compressStates(root, work));
+  assert.deepEqual(fs.readFileSync(legacy), originalBytes);
+  fs.unlinkSync(manifestFile);
+  const realLink = fs.linkSync;
+  fs.linkSync = () => {
+    throw new Error('Synthetic publish failure');
+  };
+  try {
+    assert.throws(() => compressStates(root, work), /publish failure/);
+    assert.deepEqual(fs.readFileSync(legacy), originalBytes);
+    assert.ok(!fs.existsSync(manifestFile));
+  } finally {
+    fs.linkSync = realLink;
+  }
+  extractState(root, work, first.id, path.join(root, 'legacy-restored'));
+  const compressed = compressStates(root, work);
+  assert.equal(compressed.files, 1);
+  assert.ok(!fs.existsSync(legacy));
+  assert.deepEqual(gunzipSync(fs.readFileSync(manifestFile)), originalBytes);
+  assert.equal(compressStates(root, work).files, 0);
   assert.equal(
     original.entries['works/example/assets/candidate.bin'].hash,
     original.entries['works/example/assets/reference.bin'].hash,
@@ -726,6 +758,5 @@ try {
     'PASS: immutable intermediate state, deduplicated material, deleted-file recovery, failed-command checkpoint, overwrite refusal, corruption rejection, reading-flow warning',
   );
 } finally {
-  assert.ok(root.startsWith(path.join(base, 'state-history-test-')));
-  fs.rmSync(root, { recursive: true, force: true });
+  temporary.cleanup();
 }

@@ -3,11 +3,87 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
+import { gzipSync, gunzipSync } from 'node:zlib';
 
 const digest = (bytes) =>
   crypto.createHash('sha256').update(bytes).digest('hex');
 const inside = (base, file) => file.startsWith(base + path.sep);
 const readJSON = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
+export function stateFile(root, work, id) {
+  assert.match(id, /^[\w.-]+$/, 'Unsafe state ID');
+  const { folder } = locations(root, work);
+  const plain = path.join(folder, id + '.json');
+  return fs.existsSync(plain) ? plain : plain + '.gz';
+}
+export function readState(file) {
+  const bytes = fs.readFileSync(file);
+  const manifest = JSON.parse(
+    (file.endsWith('.gz') ? gunzipSync(bytes) : bytes).toString('utf8'),
+  );
+  assert.equal(
+    digest(JSON.stringify(manifest.entries)),
+    manifest.stateHash,
+    'History manifest changed',
+  );
+  assert.equal(
+    path.basename(file).replace(/\.json(?:\.gz)?$/, ''),
+    manifest.id,
+    'History manifest ID changed',
+  );
+  return manifest;
+}
+export function compressStates(root, work) {
+  const { folder } = locations(root, work);
+  const result = { files: 0, before: 0, after: 0 };
+  if (!fs.existsSync(folder)) return result;
+  for (const name of fs.readdirSync(folder).sort()) {
+    if (!name.endsWith('.json') || ['latest.json', 'cache.json'].includes(name))
+      continue;
+    const source = path.join(folder, name),
+      target = source + '.gz';
+    assert.ok(
+      !fs.lstatSync(source).isSymbolicLink(),
+      'Refuse redirected history',
+    );
+    const bytes = fs.readFileSync(source);
+    readState(source);
+    const temporary = target + '.' + crypto.randomUUID() + '.writing';
+    try {
+      fs.writeFileSync(temporary, gzipSync(bytes), { flag: 'wx', flush: true });
+      assert.deepEqual(
+        gunzipSync(fs.readFileSync(temporary)),
+        bytes,
+        'Compressed history differs',
+      );
+      if (fs.existsSync(target)) {
+        assert.ok(
+          !fs.lstatSync(target).isSymbolicLink(),
+          'Refuse redirected history',
+        );
+        assert.deepEqual(
+          gunzipSync(fs.readFileSync(target)),
+          bytes,
+          'Existing compressed history differs',
+        );
+      } else {
+        // Publish without overwriting a concurrent writer; the source survives any failure.
+        fs.linkSync(temporary, target);
+      }
+      assert.deepEqual(
+        fs.readFileSync(source),
+        bytes,
+        'History changed during compression',
+      );
+      fs.unlinkSync(source);
+      result.files++;
+      result.before += bytes.length;
+      result.after += fs.statSync(target).size;
+    } finally {
+      fs.rmSync(temporary, { force: true });
+    }
+  }
+  return result;
+}
 function renameHistoryFile(source, destination) {
   for (let attempt = 0; ; attempt++) {
     try {
@@ -134,11 +210,17 @@ export function checkpoint(root, work, label = 'manual') {
     stateHash,
     entries,
   };
-  fs.writeFileSync(
-    path.join(folder, id + '.json'),
-    JSON.stringify(manifest, null, 2),
-    { flag: 'wx' },
-  );
+  const manifestFile = path.join(folder, id + '.json.gz');
+  const pending = manifestFile + '.' + crypto.randomUUID() + '.writing';
+  try {
+    fs.writeFileSync(pending, gzipSync(JSON.stringify(manifest)), {
+      flag: 'wx',
+      flush: true,
+    });
+    fs.linkSync(pending, manifestFile);
+  } finally {
+    fs.rmSync(pending, { force: true });
+  }
   for (const [file, value] of [
     [cacheFile, nextCache],
     [latestFile, { id, stateHash }],
@@ -157,11 +239,16 @@ export function listStates(root, work) {
     .readdirSync(folder)
     .filter(
       (name) =>
-        name.endsWith('.json') && !['latest.json', 'cache.json'].includes(name),
+        /\.json(?:\.gz)?$/.test(name) &&
+        !['latest.json', 'cache.json'].includes(name),
     )
     .sort()
+    .filter(
+      (name, index, names) =>
+        !name.endsWith('.gz') || !names.includes(name.slice(0, -3)),
+    )
     .map((name) => {
-      const m = readJSON(path.join(folder, name));
+      const m = readState(path.join(folder, name));
       return {
         id: m.id,
         label: m.label,
@@ -172,9 +259,9 @@ export function listStates(root, work) {
 }
 
 export function extractState(root, work, id, destination) {
-  const { folder, store } = locations(root, work);
+  const { store } = locations(root, work);
   assert.match(id, /^[\w.-]+$/, 'Unsafe state ID');
-  const manifest = readJSON(path.join(folder, id + '.json'));
+  const manifest = readState(stateFile(root, work, id));
   assert.equal(
     digest(JSON.stringify(manifest.entries)),
     manifest.stateHash,
@@ -218,6 +305,14 @@ export function extractState(root, work, id, destination) {
 }
 
 export function trackState(root, configFile) {
+  const cli = path.basename(process.argv[1] || ''),
+    command = process.argv[2];
+  if (
+    (cli === 'workflow.mjs' && ['status', 'check'].includes(command)) ||
+    (cli === 'auto.mjs' && command === 'status') ||
+    (cli === 'reproduce.mjs' && command === 'check')
+  )
+    return;
   const work = path.dirname(path.resolve(root, configFile));
   if (
     !inside(path.join(root, 'works'), work) ||

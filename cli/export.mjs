@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { createTemporary } from '../src/temporary.mjs';
 import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
 
@@ -34,9 +34,9 @@ const items = targetDir.endsWith('/panels')
 const scaleAt = process.argv.indexOf('--scale'),
   scale = scaleAt < 0 ? 1 : Number(process.argv[scaleAt + 1]);
 assert.ok([0.25, 1, 2].includes(scale), 'Use --scale 0.25, 1 or 2');
-const browserProfile = path.join(root, 'tmp', 'export-browser-' + process.pid);
-async function screenshot(args, file, width, height) {
+async function screenshot(args, file, width, height, temporary) {
   const child = spawn(chrome, args, { stdio: 'ignore', windowsHide: true });
+  temporary.setChild(child.pid);
   let failure,
     exited = false,
     closed = false;
@@ -89,43 +89,7 @@ async function screenshot(args, file, width, height) {
       new Promise((resolve) => setTimeout(resolve, 1500)),
     ]);
     if (!closed) child.unref();
-    else {
-      const profile = args
-        .find((a) => a.startsWith('--user-data-dir='))
-        ?.slice('--user-data-dir='.length);
-      const temporaryRoot = path.resolve(root, 'tmp');
-      // Delete only this invocation's isolated cache, after its browser has stopped.
-      assert.ok(
-        profile &&
-          path.dirname(path.resolve(profile)) === temporaryRoot &&
-          new RegExp('^export-browser-' + process.pid + '-[0-9a-f-]{36}$').test(
-            path.basename(profile),
-          ),
-        'Unexpected exporter profile path',
-      );
-      if (fs.existsSync(profile)) {
-        assert.ok(
-          !fs.lstatSync(profile).isSymbolicLink(),
-          'Refuse redirected exporter cache',
-        );
-        try {
-          fs.rmSync(profile, {
-            recursive: true,
-            force: true,
-            maxRetries: 5,
-            retryDelay: 100,
-          });
-        } catch (error) {
-          console.warn(
-            'Temporary exporter cache retained: ' +
-              profile +
-              ' (' +
-              error.code +
-              ')',
-          );
-        }
-      }
-    }
+    else temporary.cleanup();
   }
 }
 const selection = process.argv[3]?.startsWith('--') ? null : process.argv[3];
@@ -147,10 +111,10 @@ for (const page of items.filter((p) => !selection || p.id === selection)) {
     targetDir,
     `page-${page.id}${scale === 1 ? '' : '-' + scale + 'x'}.png`,
   );
-  const token = randomUUID(),
-    temporary = output + '.' + token + '.tmp.png';
+  const cache = createTemporary('browser');
+  const temporary = path.join(cache.folder, 'screenshot.png');
   // A complete fresh screenshot is the result; Chrome shutdown is not.
-  await screenshot(
+  const bytes = await screenshot(
     [
       '--headless',
       '--disable-gpu',
@@ -159,7 +123,7 @@ for (const page of items.filter((p) => !selection || p.id === selection)) {
       '--no-default-browser-check',
       '--hide-scrollbars',
       '--allow-file-access-from-files',
-      `--user-data-dir=${browserProfile + '-' + token}`,
+      `--user-data-dir=${path.join(cache.folder, 'profile')}`,
       `--window-size=${page.width || 1024},${page.height || 1536}`,
       `--force-device-scale-factor=${scale}`,
       `--screenshot=${temporary}`,
@@ -168,7 +132,14 @@ for (const page of items.filter((p) => !selection || p.id === selection)) {
     temporary,
     width,
     height,
+    cache,
   );
-  fs.renameSync(temporary, output);
+  const staging = output + '.' + path.basename(cache.folder) + '.tmp.png';
+  try {
+    fs.writeFileSync(staging, bytes, { flag: 'wx' });
+    fs.renameSync(staging, output);
+  } finally {
+    fs.rmSync(staging, { force: true });
+  }
   console.log(`Exported page ${page.id}`);
 }

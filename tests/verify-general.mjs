@@ -1,3 +1,5 @@
+import { createTemporary } from '../src/temporary.mjs';
+import { copyRuntime } from './support.mjs';
 import fs from 'node:fs';
 import { defaultQuality, categories } from '../src/quality.mjs';
 import path from 'node:path';
@@ -7,10 +9,18 @@ import { deflateSync } from 'node:zlib';
 import { compactSVG } from '../src/compact-svg.mjs';
 import { renderStoryboardSketch } from '../src/storyboard-sketch.mjs';
 import { reviewInputs } from '../src/stage-reviews.mjs';
-import { root } from '../src/workspace.mjs';
+import { root as workspaceRoot } from '../src/workspace.mjs';
+const temporary = createTemporary('test');
+const root = temporary.folder;
+copyRuntime(workspaceRoot, root);
+fs.cpSync(
+  path.join(workspaceRoot, 'works/sample'),
+  path.join(root, 'works/sample'),
+  { recursive: true },
+);
 process.chdir(root);
-fs.mkdirSync('tmp', { recursive: true });
-const folder = fs.mkdtempSync(path.join(root, 'tmp', 'generic-'));
+const folder = path.join(root, 'fixture');
+fs.mkdirSync(folder);
 const relative = path.relative(root, folder).replaceAll('\\', '/');
 const file = relative + '/workflow.json';
 const run = (...args) =>
@@ -1061,6 +1071,6 @@ try {
     'PASS: face identity review gate, reference-role and face-trait changes invalidate accepted material',
   );
 } finally {
-  assert.ok(folder.startsWith(path.join(root, 'tmp', 'generic-')));
-  fs.rmSync(folder, { recursive: true, force: true });
+  process.chdir(workspaceRoot);
+  temporary.cleanup();
 }

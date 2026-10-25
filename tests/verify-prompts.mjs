@@ -1,3 +1,4 @@
+import { createTemporary } from '../src/temporary.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
@@ -13,7 +14,8 @@ import {
 } from '../src/first-reading.mjs';
 import { captureReview } from '../src/stage-reviews.mjs';
 
-const folder = fs.mkdtempSync(path.join(root, 'tmp', 'prompt-tests-'));
+const temporary = createTemporary('test');
+const folder = temporary.folder;
 const write = (name, data) => {
   const file = path.join(folder, name);
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -372,5 +374,5 @@ try {
     'Prompt and two-phase reading regression checks passed (synthetic fixtures).',
   );
 } finally {
-  fs.rmSync(folder, { recursive: true, force: true });
+  temporary.cleanup();
 }
