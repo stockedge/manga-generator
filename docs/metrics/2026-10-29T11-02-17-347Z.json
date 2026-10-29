@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "capturedAt": "2026-10-29T11:02:17.347Z",
+  "repository": "stockedge/manga-generator",
+  "createdAt": "2026-10-22T02:58:45Z",
+  "stars": 124,
+  "forks": 23,
+  "topics": [
+    "ai-agents",
+    "ai-manga",
+    "codex",
+    "comic-generator",
+    "manga-generator",
+    "ai-comic",
+    "ai-comics",
+    "character-consistency",
+    "claude-code",
+    "comfyui",
+    "comic-creation",
+    "comic-generation",
+    "comics",
+    "generative-ai",
+    "image-generation",
+    "manga",
+    "novel-to-comic",
+    "pdf-generation",
+    "storyboard",
+    "text-to-comic"
+  ],
+  "traffic": {
+    "views": {
+      "count": 2426,
+      "uniques": 1396,
+      "views": [
+        {
+          "timestamp": "2026-10-15T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-16T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-17T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-18T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-19T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-20T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-21T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-22T00:00:00Z",
+          "count": 5,
+          "uniques": 3
+        },
+        {
+          "timestamp": "2026-10-23T00:00:00Z",
+          "count": 851,
+          "uniques": 581
+        },
+        {
+          "timestamp": "2026-10-24T00:00:00Z",
+          "count": 469,
+          "uniques": 287
+        },
+        {
+          "timestamp": "2026-10-25T00:00:00Z",
+          "count": 540,
+          "uniques": 338
+        },
+        {
+          "timestamp": "2026-10-26T00:00:00Z",
+          "count": 315,
+          "uniques": 183
+        },
+        {
+          "timestamp": "2026-10-27T00:00:00Z",
+          "count": 129,
+          "uniques": 76
+        },
+        {
+          "timestamp": "2026-10-28T00:00:00Z",
+          "count": 117,
+          "uniques": 60
+        }
+      ]
+    },
+    "clones": {
+      "count": 791,
+      "uniques": 511,
+      "clones": [
+        {
+          "timestamp": "2026-10-15T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-16T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-17T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-18T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-19T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-20T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-21T00:00:00Z",
+          "count": 0,
+          "uniques": 0
+        },
+        {
+          "timestamp": "2026-10-22T00:00:00Z",
+          "count": 22,
+          "uniques": 16
+        },
+        {
+          "timestamp": "2026-10-23T00:00:00Z",
+          "count": 213,
+          "uniques": 187
+        },
+        {
+          "timestamp": "2026-10-24T00:00:00Z",
+          "count": 249,
+          "uniques": 104
+        },
+        {
+          "timestamp": "2026-10-25T00:00:00Z",
+          "count": 109,
+          "uniques": 89
+        },
+        {
+          "timestamp": "2026-10-26T00:00:00Z",
+          "count": 115,
+          "uniques": 91
+        },
+        {
+          "timestamp": "2026-10-27T00:00:00Z",
+          "count": 30,
+          "uniques": 25
+        },
+        {
+          "timestamp": "2026-10-28T00:00:00Z",
+          "count": 53,
+          "uniques": 38
+        }
+      ]
+    },
+    "referrers": [
+      {
+        "referrer": "t.co",
+        "count": 1374,
+        "uniques": 1021
+      },
+      {
+        "referrer": "github.com",
+        "count": 78,
+        "uniques": 58
+      },
+      {
+        "referrer": "zorcha.com",
+        "count": 55,
+        "uniques": 48
+      },
+      {
+        "referrer": "Google",
+        "count": 38,
+        "uniques": 30
+      },
+      {
+        "referrer": "note.com",
+        "count": 8,
+        "uniques": 7
+      },
+      {
+        "referrer": "mangerik.com",
+        "count": 8,
+        "uniques": 6
+      },
+      {
+        "referrer": "b.hatena.ne.jp",
+        "count": 3,
+        "uniques": 3
+      },
+      {
+        "referrer": "l.threads.com",
+        "count": 3,
+        "uniques": 3
+      },
+      {
+        "referrer": "linkedin.com",
+        "count": 2,
+        "uniques": 2
+      },
+      {
+        "referrer": "doubao.com",
+        "count": 2,
+        "uniques": 1
+      }
+    ]
+  },
+  "interpretation": "Traffic is a rolling window reported by GitHub and may lag; unique counts are not additive across days. Stars and forks are point-in-time totals."
+}
