@@ -1,0 +1,6 @@
+# Python lint for the helper scripts (CI runs `ruff check` + `ruff format --check`).
+# Minimum version follows the code: Path.is_relative_to needs 3.9+.
+target-version = "py39"
+
+[lint]
+select = ["E", "F", "I", "UP", "SIM"]

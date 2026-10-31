@@ -1,0 +1,14 @@
+{
+  // Lint the Markdown that is tracked in git (root guides, docs/, agent files).
+  // Local-only trees (works/, releases/, node_modules/, ...) are out of scope.
+  "globs": ["*.md", "docs/**/*.md", ".claude/**/*.md"],
+  "config": {
+    "default": true,
+    // Japanese prose uses long lines by convention.
+    "MD013": false,
+    // Centered showcase images in READMEs use <p>/<img>.
+    "MD033": { "allowed_elements": ["p", "img"] },
+    // CLAUDE.md starts with an @AGENTS.md import; agent files start with instructions.
+    "MD041": false
+  }
+}

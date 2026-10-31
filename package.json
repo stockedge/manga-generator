@@ -18,6 +18,8 @@
     "auto": "node cli/auto.mjs",
     "pdf": "node cli/pdf.mjs",
     "lint": "eslint cli src tests eslint.config.mjs",
+    "lint:md": "markdownlint-cli2",
+    "lint:md:fix": "markdownlint-cli2 --fix",
     "format": "prettier --write \"{cli,src,tests}/**/*.mjs\" eslint.config.mjs package.json package-lock.json tsconfig.json .prettierrc.json",
     "format:check": "prettier --check \"{cli,src,tests}/**/*.mjs\" eslint.config.mjs package.json package-lock.json tsconfig.json .prettierrc.json",
     "typecheck": "tsc --project tsconfig.json",
@@ -29,6 +31,7 @@
     "@types/node": "24.19.2",
     "eslint": "10.13.0",
     "globals": "17.13.0",
+    "markdownlint-cli2": "^0.24.0",
     "prettier": "3.9.10",
     "typescript": "7.0.2"
   }
