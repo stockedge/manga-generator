@@ -75,7 +75,7 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 
 ## Agent Skills
 
-호환되는 에이전트(Claude Code, Cursor 등)를 위해 `.agents/skills/`에 제작·리뷰·아트 디렉션 스킬(`manga-production`、`manga-review`、`manga-art-direction`)을 제공합니다. 자세한 절차는 각 스킬의 `SKILL.md`와 링크된 문서를 참고하세요.
+호환되는 에이전트(Claude Code, Cursor 등)를 위해 `.agents/skills/`에 제작·리뷰·아트 디렉션 스킬([`manga-production`](.agents/skills/manga-production/SKILL.md)、[`manga-review`](.agents/skills/manga-review/SKILL.md)、[`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md))을 제공합니다. 자세한 절차는 각 스킬의 `SKILL.md`와 링크된 문서를 참고하세요. 체크아웃 안에서는 설치 단계가 필요 없으며, 호환되는 에이전트가 스킬을 자동으로 인식합니다. 다른 프로젝트에 스킬을 설치하려면 `npx skills add stockedge/manga-generator`를 실행하세요.
 
 ## 라이선스
 

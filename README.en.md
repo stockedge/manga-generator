@@ -61,7 +61,7 @@ See [Claude Code setup](docs/CLAUDE-CODE.md) and [ComfyUI provisioning](docs/COM
 
 ## Agent Skills
 
-For compatible agents (Claude Code, Cursor, and others), `.agents/skills/` provides production, review, and art-direction skills (`manga-production`, `manga-review`, `manga-art-direction`). See each skill's `SKILL.md` and its linked documents for the detailed procedures.
+For compatible agents (Claude Code, Cursor, and others), `.agents/skills/` provides production, review, and art-direction skills ([`manga-production`](.agents/skills/manga-production/SKILL.md), [`manga-review`](.agents/skills/manga-review/SKILL.md), [`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md)). See each skill's `SKILL.md` and its linked documents for the detailed procedures. No installation step is needed inside a checkout; compatible agents discover the skills automatically. To install the skills into another project, run `npx skills add stockedge/manga-generator`.
 
 ## License
 
