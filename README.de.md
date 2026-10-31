@@ -44,7 +44,7 @@ Wenn du den Ausgangstext erhalten hast, arbeite danach docs/AUTOMATIC.md ab – 
 
 ### Hinweise zur automatischen Produktion
 
-Für die vollständig automatische Produktion muss in deiner Codex-Umgebung **Bildgenerierung, visuelle Kontrolle von Bildern und Reviews durch Subagenten** verfügbar sein. Fehlen Kontingent oder Werkzeuge, speichert Codex den Zwischenstand und meldet das Problem.
+Für die vollständig automatische Produktion müssen in deiner Codex-Umgebung **Bildgenerierung, visuelle Kontrolle von Bildern und Reviews durch Subagenten** verfügbar sein. Fehlen Kontingent oder Werkzeuge, speichert Codex den Zwischenstand und meldet das Problem.
 
 ## Produktionsmodi
 
