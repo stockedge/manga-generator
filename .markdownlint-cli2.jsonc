@@ -1,7 +1,7 @@
 {
   // Lint the Markdown that is tracked in git (root guides, docs/, agent files).
   // Local-only trees (works/, releases/, node_modules/, ...) are out of scope.
-  "globs": ["*.md", "docs/**/*.md", ".claude/**/*.md"],
+  "globs": ["*.md", "docs/**/*.md", ".claude/**/*.md", ".agents/**/*.md"],
   "config": {
     "default": true,
     // Japanese prose uses long lines by convention.
