@@ -73,6 +73,10 @@ Um den Speicherplatz zu begrenzen, wird die Generationenliste im Produktionsverl
 
 Wir stellen die [Einführung und den Produktionsablauf für Claude Code](docs/CLAUDE-CODE.md) sowie die [Einrichtung von ComfyUI](docs/COMFYUI.md) bereit. Die Bildgenerierung übernimmt das externe ComfyUI, die visuelle Kontrolle und die unabhängigen Reviews Claude Code, Komposition, PDF, Verlauf und Reproduktion die gemeinsame CLI. Eine GPU-Umgebung wird zusätzlich benötigt.
 
+## Agent Skills
+
+Für kompatible Agenten (Claude Code, Cursor und andere) stellt `.agents/skills/` Skills für Produktion, Review und Art-Direction bereit (`manga-production`, `manga-review`, `manga-art-direction`). Details stehen in der jeweiligen `SKILL.md` und den dort verlinkten Dokumenten.
+
 ## Lizenz
 
 Quellcode und Dokumentation werden unter der [MIT License](LICENSE) bereitgestellt. Für die von Nutzern bereitgestellten Ausgangstexte und Referenzmaterialien, externe Modelle und erzeugte Ergebnisse gelten jeweils deren eigene Rechte und Nutzungsbedingungen.

@@ -73,6 +73,10 @@ Pour limiter l’occupation du disque, la liste des générations de l’histori
 
 Le [guide d’installation et de production pour Claude Code](docs/CLAUDE-CODE.md) et la [procédure d’installation de ComfyUI](docs/COMFYUI.md) sont fournis. La génération d’images est prise en charge par ComfyUI externe, l’inspection visuelle et les revues indépendantes par Claude Code, et la mise en page, le PDF, l’historique et la reproduction par la CLI commune. Un environnement GPU est nécessaire en plus.
 
+## Agent Skills
+
+Pour les agents compatibles (Claude Code, Cursor et autres), `.agents/skills/` fournit des skills de production, de révision et de direction artistique (`manga-production`, `manga-review`, `manga-art-direction`). Consultez le `SKILL.md` de chaque skill et ses documents liés pour les procédures détaillées.
+
 ## Licence
 
 Le code source et la documentation sont fournis sous [MIT License](LICENSE). Les textes sources et matériaux de référence fournis par les utilisateurs, les modèles externes et les productions générées restent soumis à leurs propres droits et conditions d’utilisation.

@@ -73,6 +73,10 @@ Como medida para controlar o espaço ocupado, a lista de gerações do históric
 
 Disponibilizamos os [Procedimentos de introdução e de produção para o Claude Code](docs/CLAUDE-CODE.md) e os [Procedimentos de configuração do ComfyUI](docs/COMFYUI.md). A geração de imagens é feita pelo ComfyUI externo, a verificação visual e a revisão independente pelo Claude Code, e a composição, o PDF, o histórico e a reprodução pela CLI comum. É necessário, à parte, um ambiente com GPU.
 
+## Agent Skills
+
+Para os agentes compatíveis (Claude Code, Cursor e outros), `.agents/skills/` disponibiliza as skills de produção, revisão e direção artística (`manga-production`, `manga-review`, `manga-art-direction`). Consulte o `SKILL.md` de cada skill e os documentos associados para os procedimentos detalhados.
+
 ## Licença
 
 O código-fonte e a documentação são fornecidos sob a [MIT License](LICENSE). Os textos originais e os materiais de referência fornecidos pelos utilizadores, os modelos externos e os conteúdos gerados estão sujeitos aos respetivos direitos e condições de utilização.
