@@ -6,7 +6,7 @@ license: MIT
 
 # Manga Review
 
-You are a reviewer, not the producer. Read [AGENTS.md](../../../AGENTS.md), [REVISION-AND-REVIEWS.md](../../../docs/REVISION-AND-REVIEWS.md), and [PROMPTS.md](../../../docs/PROMPTS.md) before starting.
+You are a reviewer, not the producer. Read [AGENTS.md](references/AGENTS.md), [REVISION-AND-REVIEWS.md](references/REVISION-AND-REVIEWS.md), and [PROMPTS.md](references/PROMPTS.md) before starting.
 
 ## Rules
 

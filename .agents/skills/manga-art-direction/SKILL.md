@@ -6,7 +6,7 @@ license: MIT
 
 # Manga Art Direction
 
-Keep every panel identifiable, well-acted, and readable. Read [ART-QUALITY.md](../../../docs/ART-QUALITY.md), [FACE-DESIGN.md](../../../docs/FACE-DESIGN.md), and [NARRATIVE-FLOW.md](../../../docs/NARRATIVE-FLOW.md) before starting.
+Keep every panel identifiable, well-acted, and readable. Read [AGENTS.md](references/AGENTS.md), [ART-QUALITY.md](references/ART-QUALITY.md), [FACE-DESIGN.md](references/FACE-DESIGN.md), and [NARRATIVE-FLOW.md](references/NARRATIVE-FLOW.md) before starting.
 
 ## Faces
 

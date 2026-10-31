@@ -50,13 +50,42 @@ for (const id of ids) {
     heading && heading.startsWith('# '),
     `${file} needs a top-level heading after the frontmatter`,
   );
+  const bundled = new Set();
   for (const [, target] of text.matchAll(
     /\]\((?!https?:|mailto:|#)([^)]+)\)/g,
   )) {
-    const resolved = path.resolve(path.dirname(file), target.split('#')[0]);
+    const relative = target.split('#')[0];
+    const resolved = path.resolve(path.dirname(file), relative);
     assert.ok(
       fs.existsSync(resolved),
       `${file} links to a missing file: ${target}`,
+    );
+    if (relative.startsWith('references/')) bundled.add(relative);
+  }
+  // Bundled references must match the repo sources. Compared LF-normalized
+  // so CRLF and LF checkouts both pass.
+  const referencesDir = path.join(path.dirname(file), 'references');
+  const onDisk = fs.existsSync(referencesDir)
+    ? fs.readdirSync(referencesDir).sort()
+    : [];
+  assert.deepEqual(
+    onDisk,
+    [...bundled].map((link) => path.basename(link)).sort(),
+    `${file} references/ must contain exactly its linked copies`,
+  );
+  const normalize = (entry) =>
+    fs.readFileSync(entry, 'utf8').replace(/\r\n/g, '\n');
+  for (const link of bundled) {
+    const name = path.basename(link);
+    const source =
+      name === 'AGENTS.md'
+        ? path.join(workspaceRoot, name)
+        : path.join(workspaceRoot, 'docs', name);
+    assert.ok(fs.existsSync(source), `${file} has no repo source for ${link}`);
+    assert.equal(
+      normalize(path.join(referencesDir, name)),
+      normalize(source),
+      `${file} copy is out of sync: ${link}`,
     );
   }
 }
