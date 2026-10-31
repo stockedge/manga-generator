@@ -1,4 +1,5 @@
 """Offline downloader regression: verified reuse, conflict and partial failure."""
+
 import hashlib
 import importlib.util
 import io
@@ -20,9 +21,14 @@ class DownloadTest(unittest.TestCase):
         content = b"test model, not actual weights"
         revision = "a" * 40
         sha = hashlib.sha256(content).hexdigest()
-        metadata = json.dumps({"sha": revision, "siblings": [
-            {"rfilename": "split_files/vae/test.bin", "lfs": {"sha256": sha}}
-        ]}).encode()
+        metadata = json.dumps(
+            {
+                "sha": revision,
+                "siblings": [
+                    {"rfilename": "split_files/vae/test.bin", "lfs": {"sha256": sha}}
+                ],
+            }
+        ).encode()
         calls = []
 
         def respond(url, **kwargs):
@@ -39,21 +45,29 @@ class DownloadTest(unittest.TestCase):
                 self.assertEqual(target.read_bytes(), content)
                 calls.clear()
                 models.download(root, "org/model", "vae", "test.bin")
-                self.assertEqual(len(calls), 1, "Verified existing model was downloaded again")
+                self.assertEqual(
+                    len(calls), 1, "Verified existing model was downloaded again"
+                )
                 target.write_bytes(b"keep conflicting file")
                 with self.assertRaises(AssertionError):
                     models.download(root, "org/model", "vae", "test.bin")
                 self.assertEqual(target.read_bytes(), b"keep conflicting file")
             target.unlink()
-            with patch.object(models.urllib.request, "urlopen", side_effect=[
-                io.BytesIO(metadata), io.BytesIO(b"partial")
-            ]):
-                with self.assertRaises(AssertionError):
-                    models.download(root, "org/model", "vae", "test.bin")
+            with (
+                patch.object(
+                    models.urllib.request,
+                    "urlopen",
+                    side_effect=[io.BytesIO(metadata), io.BytesIO(b"partial")],
+                ),
+                self.assertRaises(AssertionError),
+            ):
+                models.download(root, "org/model", "vae", "test.bin")
             self.assertFalse(target.exists(), "Corrupt download was published")
             with patch.object(models.urllib.request, "urlopen", side_effect=respond):
                 models.download(root, "org/model", "vae", "test.bin")
-            self.assertEqual(target.read_bytes(), content, "Interrupted download did not recover")
+            self.assertEqual(
+                target.read_bytes(), content, "Interrupted download did not recover"
+            )
 
 
 if __name__ == "__main__":

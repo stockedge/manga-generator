@@ -40,7 +40,7 @@ node cli/auto.mjs status
 以後は `docs/AUTOMATIC.md` の全工程を実行する。Codex専用箇所は次のように置き換える。
 
 | 共通手順の記載 | Claude Codeでの実行 |
-|---|---|
+| --- | --- |
 | imagegenスキル・組み込みimage_gen | `cli/qwen-comfy.mjs`。参照・指示の渡し方はCOMFYUI.md参照 |
 | view_image | Readで保存済みPNGを開く。画像を読めない場合は未確認として止める |
 | 独立サブエージェント | manga-reviewerを実際に起動し、prepareのrequest・テンプレート・実ファイルを渡す |

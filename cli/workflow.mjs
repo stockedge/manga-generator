@@ -877,6 +877,7 @@ if (command === 'layout') {
     path.join(output, 'reader.html'),
     fs
       .readFileSync(path.join(root, 'templates', 'reader.html'), 'utf8')
+      .replaceAll('\r\n', '\n') // LF output on any checkout line endings
       .replaceAll('{{TITLE}}', xml(config.title))
       .replaceAll('{{AUTHOR}}', xml(config.author || ''))
       .replace(
