@@ -75,7 +75,7 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 
 ## Agent Skills
 
-対応エージェント（Claude Code、Cursorなど）向けに、`.agents/skills/` へ制作・レビュー・作画のスキル（`manga-production`、`manga-review`、`manga-art-direction`）を用意しています。詳細な手順は各スキルの `SKILL.md` とリンク先のドキュメントを参照してください。
+対応エージェント（Claude Code、Cursorなど）向けに、`.agents/skills/` へ制作・レビュー・作画のスキル（[`manga-production`](.agents/skills/manga-production/SKILL.md)、[`manga-review`](.agents/skills/manga-review/SKILL.md)、[`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md)）を用意しています。詳細な手順は各スキルの `SKILL.md` とリンク先のドキュメントを参照してください。 このリポジトリ内では導入操作は不要です（対応エージェントが自動認識します）。他のプロジェクトへ導入するには `npx skills add stockedge/manga-generator` を実行してください。
 
 ## ライセンス
 

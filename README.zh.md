@@ -75,7 +75,7 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 
 ## Agent Skills
 
-面向兼容的 Agent（Claude Code、Cursor 等），`.agents/skills/` 提供制作、评审和美术指导技能（`manga-production`、`manga-review`、`manga-art-direction`）。详细步骤请参阅各技能的 `SKILL.md` 及其链接文档。
+面向兼容的 Agent（Claude Code、Cursor 等），`.agents/skills/` 提供制作、评审和美术指导技能（[`manga-production`](.agents/skills/manga-production/SKILL.md)、[`manga-review`](.agents/skills/manga-review/SKILL.md)、[`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md)）。详细步骤请参阅各技能的 `SKILL.md` 及其链接文档。 在检出目录内无需安装步骤，兼容的 Agent 会自动发现这些技能。要将技能安装到其他项目，请运行 `npx skills add stockedge/manga-generator`。
 
 ## 许可证
 

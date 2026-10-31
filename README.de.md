@@ -75,7 +75,7 @@ Wir stellen die [Einführung und den Produktionsablauf für Claude Code](docs/CL
 
 ## Agent Skills
 
-Für kompatible Agenten (Claude Code, Cursor und andere) stellt `.agents/skills/` Skills für Produktion, Review und Art-Direction bereit (`manga-production`, `manga-review`, `manga-art-direction`). Details stehen in der jeweiligen `SKILL.md` und den dort verlinkten Dokumenten.
+Für kompatible Agenten (Claude Code, Cursor und andere) stellt `.agents/skills/` Skills für Produktion, Review und Art-Direction bereit ([`manga-production`](.agents/skills/manga-production/SKILL.md), [`manga-review`](.agents/skills/manga-review/SKILL.md), [`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md)). Details stehen in der jeweiligen `SKILL.md` und den dort verlinkten Dokumenten. Innerhalb eines Checkouts ist keine Installation nötig; kompatible Agenten erkennen die Skills automatisch. Um die Skills in einem anderen Projekt zu installieren, führe `npx skills add stockedge/manga-generator` aus.
 
 ## Lizenz
 
