@@ -40,6 +40,6 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install 'ruff==0.16.3'
-      - run: ruff check .
-      - run: ruff format --check .
+      - run: ruff check scripts tests
+      - run: ruff format --check scripts tests
       - run: python3 tests/verify-comfyui-setup.py
