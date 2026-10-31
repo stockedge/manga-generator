@@ -24,11 +24,13 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - uses: browser-actions/setup-chrome@v2
       - run: npm ci
       - run: npm run check:code
       - run: npm run check
         env:
           MANGA_PROJECT: works/sample/workflow.json
+          MANGA_BROWSER: chrome
 
   python:
     runs-on: ubuntu-latest
