@@ -1,6 +1,6 @@
 # Manga Generator
 
-English | [日本語](README.md)
+[English](README.en.md) | [日本語](README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [한국어](README.ko.md)
 
 A manga production tool for working with Codex to turn a novel or other source text into a script, storyboards, generated artwork, lettering, reviewed pages, and a PDF.
 
