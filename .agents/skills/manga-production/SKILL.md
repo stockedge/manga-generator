@@ -1,7 +1,7 @@
 ---
-name: manga-production
-description: Produce a complete manga from a UTF-8 source story with the manga-generator CLI: intake, script, reference and panel images, visual inspection, lettering, reading pages, PDF, and reproducibility package. Use when asked to turn a story or novel into a manga or run end-to-end production. Keywords: manga, production, adapt, 漫画化, 制作, 自動制作.
-license: MIT
+name: "manga-production"
+description: "Produce a complete manga from a UTF-8 source story with the manga-generator CLI: intake, script, reference and panel images, visual inspection, lettering, reading pages, PDF, and reproducibility package. Use when asked to turn a story or novel into a manga or run end-to-end production. Keywords: manga, production, adapt, 漫画化, 制作, 自動制作."
+license: "MIT"
 ---
 
 # Manga Production
@@ -18,7 +18,7 @@ Turn one source story into a finished manga. Read [AGENTS.md](references/AGENTS.
 
 ## Flow
 
-1. Intake: `auto start` the source file (or save pasted text as UTF-8 first), then read the README, REPRODUCE, workflow file, full source, and `workflow/automatic-task.md`.
+1. Intake: `auto start` the source file (or save pasted text as UTF-8 first), then read the README, REPRODUCE, workflow file, full source, and the `automatic-task.md` path printed by `auto start`.
 2. Organize the story (characters, events, scenes, flashbacks, foreshadowing, ending), set page count and per-page intent, and finalize dialogue before drawing.
 3. Define `cast`, each face's 3 traits, `sections`, `panel.state`, and `referenceRoles`. Map every source span to panels in `source-coverage.json`.
 4. Run `production-audit` and fill each panel's `production` (moment, before/after, hands, props). Fix warnings in the storyboard before generating.

@@ -1,7 +1,7 @@
 ---
-name: manga-art-direction
-description: Direct consistent manga artwork: face identity with 3 traits and expression sets, 8-item drawing inspection at multiple scales, panel composition with hands and props, and natural reading order across pages. Use when generating or reviewing manga art, faces, hands, or page flow. Keywords: art, face, composition, 作画, 顔, 構図, 読順.
-license: MIT
+name: "manga-art-direction"
+description: "Direct consistent manga artwork: face identity with 3 traits and expression sets, 8-item drawing inspection at multiple scales, panel composition with hands and props, and natural reading order across pages. Use when generating or reviewing manga art, faces, hands, or page flow. Keywords: art, face, composition, 作画, 顔, 構図, 読順."
+license: "MIT"
 ---
 
 # Manga Art Direction

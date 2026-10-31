@@ -3,33 +3,50 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { root as workspaceRoot } from '../src/workspace.mjs';
 
-const skillsDir = path.join(workspaceRoot, '.agents/skills');
-assert.ok(fs.existsSync(skillsDir), 'Missing .agents/skills directory');
-const ids = fs
-  .readdirSync(skillsDir, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name)
-  .sort();
-assert.ok(ids.length > 0, 'No skills found under .agents/skills');
-
+// Restricted frontmatter syntax: single-line double-quoted scalars only,
+// plus an optional `metadata:` mapping skipped as indented lines. Anything
+// else (unquoted scalars, block scalars) is rejected so CI never passes
+// frontmatter that strict YAML skill loaders reject.
 const parseFrontmatter = (text, file) => {
   const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(text);
   assert.ok(match, `${file} must start with a YAML frontmatter block`);
   const frontmatter = {};
-  for (const line of match[1].split('\n')) {
-    if (!line.trim() || line.startsWith(' ') || line.startsWith('\t')) continue;
-    const at = line.indexOf(':');
-    assert.ok(at > 0, `${file} has a malformed frontmatter line: ${line}`);
-    frontmatter[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+  let inMap = false;
+  for (const rawLine of match[1].split('\n')) {
+    const line = rawLine.replace(/\r$/, '');
+    if (!line.trim()) {
+      continue;
+    }
+    if (/^\s/.test(line)) {
+      assert.ok(
+        inMap,
+        `${file} has an indented line outside a mapping: ${line}`,
+      );
+      continue;
+    }
+    inMap = false;
+    const scalar = /^([A-Za-z][A-Za-z0-9-]*):\s*(.*)$/.exec(line);
+    assert.ok(scalar, `${file} has a malformed frontmatter line: ${line}`);
+    const [, key, raw] = scalar;
+    if (raw === '') {
+      assert.equal(
+        key,
+        'metadata',
+        `${file} only metadata may use mapping form`,
+      );
+      inMap = true;
+      continue;
+    }
+    assert.ok(
+      /^"(?:[^"\\\r\n]|\\["\\])*"$/.test(raw),
+      `${file} field ${key} must use a double-quoted scalar`,
+    );
+    frontmatter[key] = raw.slice(1, -1).replace(/\\(["\\])/g, '$1');
   }
   return { frontmatter, body: text.slice(match[0].length) };
 };
 
-for (const id of ids) {
-  const file = path.join(skillsDir, id, 'SKILL.md');
-  assert.ok(fs.existsSync(file), `Missing ${file}`);
-  const text = fs.readFileSync(file, 'utf8');
-  const { frontmatter, body } = parseFrontmatter(text, file);
+const checkIdentity = (frontmatter, file, id) => {
   const { name, description } = frontmatter;
   assert.ok(
     name &&
@@ -45,6 +62,75 @@ for (const id of ids) {
     description && description.length <= 1024,
     `${file} needs a 1-1024 character description`,
   );
+};
+
+// Regression fixtures for the parser itself.
+const head = (fields) => `---\n${fields}\n---\n\n# Fixture\n`;
+const fixtures = [
+  {
+    title: 'quoted colon is accepted',
+    text: head('name: "demo-skill"\ndescription: "Does things: with a colon."'),
+    id: 'demo-skill',
+    want: null,
+  },
+  {
+    title: 'unquoted colon is rejected',
+    text: head('name: "demo-skill"\ndescription: Does things: badly'),
+    id: 'demo-skill',
+    want: /double-quoted/,
+  },
+  {
+    title: 'empty block scalar is rejected',
+    text: head('name: "demo-skill"\ndescription: >'),
+    id: 'demo-skill',
+    want: /double-quoted/,
+  },
+  {
+    title: 'empty description is rejected',
+    text: head('name: "demo-skill"\ndescription: ""'),
+    id: 'demo-skill',
+    want: /1-1024/,
+  },
+  {
+    title: 'invalid name is rejected',
+    text: head('name: "Bad_Name"\ndescription: "Fine."'),
+    id: 'Bad_Name',
+    want: /invalid skill name/,
+  },
+  {
+    title: 'name and directory mismatch is rejected',
+    text: head('name: "demo-skill"\ndescription: "Fine."'),
+    id: 'other-dir',
+    want: /must match its directory/,
+  },
+];
+for (const fixture of fixtures) {
+  if (fixture.want === null) {
+    const { frontmatter } = parseFrontmatter(fixture.text, fixture.title);
+    checkIdentity(frontmatter, fixture.title, fixture.id);
+  } else {
+    assert.throws(() => {
+      const { frontmatter } = parseFrontmatter(fixture.text, fixture.title);
+      checkIdentity(frontmatter, fixture.title, fixture.id);
+    }, fixture.want);
+  }
+}
+
+const skillsDir = path.join(workspaceRoot, '.agents/skills');
+assert.ok(fs.existsSync(skillsDir), 'Missing .agents/skills directory');
+const ids = fs
+  .readdirSync(skillsDir, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
+assert.ok(ids.length > 0, 'No skills found under .agents/skills');
+
+for (const id of ids) {
+  const file = path.join(skillsDir, id, 'SKILL.md');
+  assert.ok(fs.existsSync(file), `Missing ${file}`);
+  const text = fs.readFileSync(file, 'utf8');
+  const { frontmatter, body } = parseFrontmatter(text, file);
+  checkIdentity(frontmatter, file, id);
   const [heading] = body.split('\n').filter((line) => line.trim());
   assert.ok(
     heading && heading.startsWith('# '),
