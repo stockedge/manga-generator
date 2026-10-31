@@ -2,7 +2,7 @@
 
 [English](README.en.md) | [日本語](README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [한국어](README.ko.md)
 
-소설이나 글 원작에서 대본·네메·이미지 생성·문자 배치·검수·PDF 출력까지 Codex와 함께 진행하는 만화 제작 도구입니다.
+소설이나 글 원작에서 대본·콘티·이미지 생성·문자 배치·검수·PDF 출력까지 Codex와 함께 진행하는 만화 제작 도구입니다.
 
 글자와 말풍선을 그림과 분리해 배치하기 때문에, 나중에 대사를 고치기 쉽습니다.
 
@@ -56,7 +56,7 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 
 기존 작품은 `MANGA_PROJECT`를 지정하고 `node cli/stage-review.mjs mode economy`를 실행합니다(품질 우선으로 되돌리려면 `mode quality`). 전환은 이력에 저장되며, 기존 리뷰를 새 모드의 확인 결과로 재사용하지 않고 다시 가져옵니다. 모델은 바뀌지 않습니다. 자세한 내용은 [제작 모드](docs/PRODUCTION-MODES.md)를 참고하세요.
 
-절약 모드는 컷과 앞뒤 맥락에 대한 자료 제한, 이력을 넘기지 않는 독립 리뷰, 결정 기록, 필요한 대상에만 다시 검토, 상세 로그가 붙은 간결한 출력에 대응합니다. 그리기 전에는 대본과 전체 네메의 합격 여부를 `seal`로 확정하고, 수정할 때는 사유를 붙여 `reopen`할 수 있습니다. 비교는 `node cli/compare-modes.mjs`로 다시 실행할 수 있습니다.
+절약 모드는 컷과 앞뒤 맥락에 대한 자료 제한, 이력을 넘기지 않는 독립 리뷰, 결정 기록, 필요한 대상에만 다시 검토, 상세 로그가 붙은 간결한 출력에 대응합니다. 그리기 전에는 대본과 전체 콘티의 합격 여부를 `seal`로 확정하고, 수정할 때는 사유를 붙여 `reopen`할 수 있습니다. 비교는 `node cli/compare-modes.mjs`로 다시 실행할 수 있습니다.
 
 ## 상세 문서
 

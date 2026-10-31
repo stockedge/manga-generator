@@ -18,7 +18,7 @@ Exemplo de uma página finalizada: os dois painéis iniciais de 『[クラスの
 
 ## Como começar (3 passos)
 
-Da preparação do ambiente até à produção da manga, os comandos podem ser delegateados ao Codex.
+Da preparação do ambiente até à produção da manga, os comandos podem ser delegados ao Codex.
 
 1. **Peça a preparação**: copie o texto da caixa abaixo e envie-o numa nova conversa do Codex.
 2. **Siga as orientações**: a verificação e a instalação do software necessário decorrem automaticamente. Só precisa de intervir quando surgir um ecrã de permissões do sistema operativo ou quando o Codex lhe indicar que precisa de executar alguma ação.
@@ -56,7 +56,7 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 
 Nas obras existentes, indique `MANGA_PROJECT` e execute `node cli/stage-review.mjs mode economy` (para voltar à qualidade prioritária, `mode quality`). A alteração fica registada no histórico e as revisões anteriores não são reutilizadas como confirmação do novo modo: são obtidas de novo. O modelo não é trocado. Consulte [Modos de produção](docs/PRODUCTION-MODES.md) para mais detalhes.
 
-O modo económico limita os materiais de revisão aos painéis relevantes e ao respetivo contexto, faz revisões independentes sem histórico, regista as decisões, volta a rever apenas o que é necessário e produz uma saída mais curta com registos detalhados. Antes da arte final, finalize a aprovação do roteiro e de todos os storyboards com `seal`; para corrigir, use `reopen` indicando o motivo. A comparação pode ser executada novamente com `node cli/compare-modes.mjs`.
+O modo económico limita os materiais de revisão aos painéis relevantes e ao respetivo contexto, faz revisões independentes sem histórico, regista as decisões, volta a rever apenas o que é necessário e produz uma saída mais curta com registos detalhados. Antes de desenhar, finalize a aprovação do texto de origem, do roteiro e de todos os storyboards com `seal`; para corrigir, use `reopen` indicando o motivo. A comparação pode ser executada novamente com `node cli/compare-modes.mjs`.
 
 ## Documentação detalhada
 
