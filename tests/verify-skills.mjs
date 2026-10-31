@@ -136,42 +136,68 @@ for (const id of ids) {
     heading && heading.startsWith('# '),
     `${file} needs a top-level heading after the frontmatter`,
   );
-  const bundled = new Set();
-  for (const [, target] of text.matchAll(
-    /\]\((?!https?:|mailto:|#)([^)]+)\)/g,
-  )) {
-    const relative = target.split('#')[0];
-    const resolved = path.resolve(path.dirname(file), relative);
+  const skillDir = path.dirname(file);
+  const referencesDir = path.join(skillDir, 'references');
+  const mdFiles = new Set([path.resolve(file)]);
+  if (fs.existsSync(referencesDir)) {
+    for (const entry of fs.readdirSync(referencesDir)) {
+      assert.ok(
+        entry.endsWith('.md'),
+        `${file} references/ must contain only Markdown: ${entry}`,
+      );
+      mdFiles.add(path.join(referencesDir, entry));
+    }
+  }
+  const mdLinks = (content) =>
+    [...content.matchAll(/\]\((?!https?:|mailto:|#)([^)]+)\)/g)]
+      .map(([, target]) => target.split('#')[0])
+      .filter((target) => target.endsWith('.md'));
+  // Every relative Markdown link must resolve inside this skill directory,
+  // so the bundle stays standalone. Non-Markdown asset links are out of
+  // scope: some point at untracked research files.
+  const seen = new Set([path.resolve(file)]);
+  const queue = [path.resolve(file)];
+  while (queue.length > 0) {
+    const current = queue.pop();
+    for (const target of mdLinks(fs.readFileSync(current, 'utf8'))) {
+      const resolved = path.resolve(path.dirname(current), target);
+      assert.ok(
+        resolved.startsWith(skillDir + path.sep),
+        `${file} links outside its skill directory: ${target}`,
+      );
+      assert.ok(
+        mdFiles.has(resolved),
+        `${file} links to a missing file: ${target}`,
+      );
+      if (!seen.has(resolved)) {
+        seen.add(resolved);
+        queue.push(resolved);
+      }
+    }
+  }
+  for (const entry of mdFiles) {
+    if (entry === path.resolve(file)) continue;
     assert.ok(
-      fs.existsSync(resolved),
-      `${file} links to a missing file: ${target}`,
+      seen.has(entry),
+      `${file} references/ has an unreachable file: ${path.basename(entry)}`,
     );
-    if (relative.startsWith('references/')) bundled.add(relative);
   }
   // Bundled references must match the repo sources. Compared LF-normalized
   // so CRLF and LF checkouts both pass.
-  const referencesDir = path.join(path.dirname(file), 'references');
-  const onDisk = fs.existsSync(referencesDir)
-    ? fs.readdirSync(referencesDir).sort()
-    : [];
-  assert.deepEqual(
-    onDisk,
-    [...bundled].map((link) => path.basename(link)).sort(),
-    `${file} references/ must contain exactly its linked copies`,
-  );
   const normalize = (entry) =>
     fs.readFileSync(entry, 'utf8').replace(/\r\n/g, '\n');
-  for (const link of bundled) {
-    const name = path.basename(link);
+  for (const entry of mdFiles) {
+    if (entry === path.resolve(file)) continue;
+    const name = path.basename(entry);
     const source =
       name === 'AGENTS.md'
         ? path.join(workspaceRoot, name)
         : path.join(workspaceRoot, 'docs', name);
-    assert.ok(fs.existsSync(source), `${file} has no repo source for ${link}`);
+    assert.ok(fs.existsSync(source), `${file} has no repo source for ${name}`);
     assert.equal(
-      normalize(path.join(referencesDir, name)),
+      normalize(entry),
       normalize(source),
-      `${file} copy is out of sync: ${link}`,
+      `${file} copy is out of sync: ${name}`,
     );
   }
 }
