@@ -59,6 +59,10 @@ Start with the [English setup and production walkthrough](docs/QUICKSTART.en.md)
 
 See [Claude Code setup](docs/CLAUDE-CODE.md) and [ComfyUI provisioning](docs/COMFYUI.md) (Japanese). Claude Code orchestrates and reviews; external ComfyUI generates images. Composition, PDF, history and completion checks use the shared CLI. A separate GPU environment is required.
 
+## Agent Skills
+
+For compatible agents (Claude Code, Cursor, and others), `.agents/skills/` provides production, review, and art-direction skills ([`manga-production`](.agents/skills/manga-production/SKILL.md), [`manga-review`](.agents/skills/manga-review/SKILL.md), [`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md)). See each skill's `SKILL.md` and its linked documents for the detailed procedures. No installation step is needed inside a checkout; compatible agents discover the skills automatically. To install the skills into another project, run `npx skills add stockedge/manga-generator`.
+
 ## License
 
 Source code and documentation are provided under the [MIT License](LICENSE). Source stories and reference materials supplied by users, external models, and generated outputs remain subject to their respective rights and terms of use.

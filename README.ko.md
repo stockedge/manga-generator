@@ -73,6 +73,10 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 
 [Claude Code용 도입·제작 절차](docs/CLAUDE-CODE.md)와 [ComfyUI 구축 절차](docs/COMFYUI.md)를 준비했습니다. 이미지 생성은 외부 ComfyUI, 육안 확인과 독립 리뷰는 Claude Code, 조판·PDF·이력·재현은 공통 CLI가 담당합니다. GPU 환경은 별도로 필요합니다.
 
+## Agent Skills
+
+호환되는 에이전트(Claude Code, Cursor 등)를 위해 `.agents/skills/`에 제작·리뷰·아트 디렉션 스킬([`manga-production`](.agents/skills/manga-production/SKILL.md)、[`manga-review`](.agents/skills/manga-review/SKILL.md)、[`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md))을 제공합니다. 자세한 절차는 각 스킬의 `SKILL.md`와 링크된 문서를 참고하세요. 체크아웃 안에서는 설치 단계가 필요 없으며, 호환되는 에이전트가 스킬을 자동으로 인식합니다. 다른 프로젝트에 스킬을 설치하려면 `npx skills add stockedge/manga-generator`를 실행하세요.
+
 ## 라이선스
 
 소스 코드와 문서는 [MIT License](LICENSE)로 제공합니다. 이용자가 준비한 원작이나 참조 자료, 외부 모델, 생성된 결과물에는 각자의 권리와 이용 조건이 적용됩니다.

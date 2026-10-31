@@ -73,6 +73,10 @@ Como medida para controlar el espacio ocupado, la lista de generaciones del hist
 
 Disponemos de la [guía de introducción y producción para Claude Code](docs/CLAUDE-CODE.md) y de las [instrucciones de instalación de ComfyUI](docs/COMFYUI.md). La generación de imágenes se delega en un ComfyUI externo, la inspección visual y la revisión independiente en Claude Code, y el montaje, el PDF, el historial y la reproducibilidad en la CLI común. Necesitarás además un entorno con GPU.
 
+## Agent Skills
+
+Para los agentes compatibles (Claude Code, Cursor y otros), `.agents/skills/` ofrece habilidades de producción, revisión y dirección artística ([`manga-production`](.agents/skills/manga-production/SKILL.md), [`manga-review`](.agents/skills/manga-review/SKILL.md), [`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md)). Consulta el `SKILL.md` de cada habilidad y sus documentos enlazados para ver los procedimientos detallados. Dentro de una copia del repositorio no se necesita instalación; los agentes compatibles detectan las habilidades automáticamente. Para instalar las habilidades en otro proyecto, ejecuta `npx skills add stockedge/manga-generator`.
+
 ## Licencia
 
 El código fuente y la documentación se proporcionan bajo la [MIT License](LICENSE). Los textos originales y los materiales de referencia que aporten los usuarios, los modelos externos y los resultados generados siguen rigiéndose por sus respectivos derechos y condiciones de uso.

@@ -73,6 +73,10 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 
 提供了[面向 Claude Code 的上手与制作流程](docs/CLAUDE-CODE.md)和[ComfyUI 搭建步骤](docs/COMFYUI.md)。图像生成交给外部 ComfyUI，视觉检查和独立评审交给 Claude Code，排版、PDF、历史与复现由共用 CLI 负责。GPU 环境需要另外准备。
 
+## Agent Skills
+
+面向兼容的 Agent（Claude Code、Cursor 等），`.agents/skills/` 提供制作、评审和美术指导技能（[`manga-production`](.agents/skills/manga-production/SKILL.md)、[`manga-review`](.agents/skills/manga-review/SKILL.md)、[`manga-art-direction`](.agents/skills/manga-art-direction/SKILL.md)）。详细步骤请参阅各技能的 `SKILL.md` 及其链接文档。 在检出目录内无需安装步骤，兼容的 Agent 会自动发现这些技能。要将技能安装到其他项目，请运行 `npx skills add stockedge/manga-generator`。
+
 ## 许可证
 
 源代码与文档以 [MIT License](LICENSE) 提供。用户自备的原文与参考素材、外部模型、生成出的成果物，各自适用其原有的权利与使用条款。
