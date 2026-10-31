@@ -1,6 +1,6 @@
 # Manga Generator
 
-[English](README.en.md) | [日本語](README.md) | 简体中文
+[English](README.en.md) | [日本語](README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [한국어](README.ko.md)
 
 从小说或其他原文出发，一路推进到**脚本 → 分镜 → 图像生成 → 文字排版 → 检品 → PDF 输出**的漫画制作工具，配合 Codex 使用。
 
