@@ -1,6 +1,6 @@
 # Manga Generator
 
-[English](README.en.md) | [日本語](README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [한국어](README.ko.md)
+[English](README.en.md) | [Bahasa Indonesia](README.id.md) | [日本語](README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [한국어](README.ko.md)
 
 소설이나 글 원작에서 대본·콘티·이미지 생성·문자 배치·검수·PDF 출력까지 Codex와 함께 진행하는 만화 제작 도구입니다.
 
