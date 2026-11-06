@@ -1,6 +1,6 @@
 # Manga Generator
 
-[English](README.en.md) | [日本語](README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [한국어](README.ko.md)
+[English](README.en.md) | [Bahasa Indonesia](README.id.md) | [日本語](README.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [한국어](README.ko.md)
 
 Ein Manga-Produktionstool, das mit Codex von einem Roman oder einem anderen Ausgangstext über Skript, Storyboard, Bildgenerierung, Lettering und Qualitätsprüfung bis zur PDF-Ausgabe führt.
 
