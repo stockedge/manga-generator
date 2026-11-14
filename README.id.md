@@ -28,7 +28,7 @@ Anda dapat meminta AI Agent menangani perintah CLI, mulai dari penyiapan lingkun
 
 ```text
 Tolong siapkan alat produksi manga berikut di komputer ini.
-Repository URL: https://github.com/bagussatoto/manga-generator
+Repository URL: https://github.com/stockedge/manga-generator
 
 Saya bukan software engineer. Tolong tangani perintah CLI dan konfigurasi semaksimal mungkin. Jika Anda membutuhkan tindakan dari saya (seperti izin administrator), jelaskan alasannya dan berikan langkah-langkahnya.
 
