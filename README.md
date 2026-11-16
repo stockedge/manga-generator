@@ -68,6 +68,7 @@ node cli/auto.mjs start "C:\path\original.txt" --mode economy
 - [原作からの自動制作手順](docs/AUTOMATIC.md)
 - [開発者向けフォルダー構成](docs/PROJECT-LAYOUT.md)
 - [任意の制作補助とCLI修正](docs/ASSIST.md)
+- [v0.3.0・v0.3.1の参考資料と設計判断](docs/RELEASE-SOURCES.md)
 - [GitHubでの利用状況と計測方法](docs/GITHUB-ADOPTION.md)
 
 容量対策として、制作履歴の世代一覧はgzipで保存し、ブラウザ・テスト用キャッシュはWindowsのローカル一時領域へ置きます。既存履歴の圧縮、残骸回収、配布用と制作履歴用パッケージの使い分けは[保存と一時領域](REPRODUCE.md#容量を抑える保存と一時領域)を参照してください。
