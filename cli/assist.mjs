@@ -145,6 +145,19 @@ if (!mode || mode === '--help') {
         'マスクならalpha/髪/境界/内部穴/半透明',
         '候補登録後に正式採用・座標測定・合成・独立レビュー',
       ],
+      generationEvidenceCommand: [
+        'node',
+        'cli/generation.mjs',
+        'record-edit',
+        ticket.panel,
+        path
+          .relative(root, path.join(directory, 'original.png'))
+          .replaceAll('\\', '/'),
+        path.relative(root, path.join(directory, name)).replaceAll('\\', '/'),
+        'REPLACE_WITH_SAVED_ACTUAL_EDIT_INSTRUCTION.txt',
+      ],
+      generationEvidenceNote:
+        'Save the actual editing steps as UTF-8 text and record-edit before adoption. This requires valid generation evidence for the original image; it does not claim a new AI generation.',
       nextCommand: [
         'node',
         'cli/workflow.mjs',
@@ -219,6 +232,11 @@ if (!mode || mode === '--help') {
       }));
     }
     if (mode === 'delivery') {
+      execFileSync(
+        process.execPath,
+        [path.join(root, 'cli/workflow.mjs'), 'verify-output'],
+        { cwd: root, env: process.env, windowsHide: true, stdio: 'pipe' },
+      );
       const pages = c.pages.map((p) => {
         const file = `${c.outputDir}/page-${p.id}.png`,
           info = png(file),

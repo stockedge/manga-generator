@@ -157,7 +157,10 @@ function validate(data = config) {
         );
       } else if (p.artworkCrop !== undefined) {
         const adopted = path.join(root, assetDir, 'panels', `${p.id}.png`);
-        if (fs.existsSync(adopted))
+        if (
+          fs.existsSync(adopted) &&
+          !(command === 'accept-panel' && process.argv[3] === p.id)
+        )
           cropRectangle(p.artworkCrop, imageFile(adopted));
       }
       if (p.storyboardSketch !== undefined)
@@ -802,6 +805,10 @@ if (command === 'layout') {
   const p = page.panels.find((p) => p.id === process.argv[3]),
     j = panelJob(page, p);
   assert.ok(
+    p.artworkCrop === undefined,
+    'Remove artworkCrop before switching to page artwork',
+  );
+  assert.ok(
     process.argv.includes('--reviewed'),
     'Inspect replacement page before removing override',
   );
@@ -904,6 +911,16 @@ if (command === 'layout') {
   console.log(
     'Saved aligned, transparent artwork/lettering SVG layers in ' + layers,
   );
+} else if (command === 'verify-output') {
+  for (const page of config.pages) {
+    assert.equal(status(page), 'ready', 'Page is not ready: ' + page.id);
+    assert.equal(
+      fs.readFileSync(path.join(output, `page-${page.id}.svg`), 'utf8'),
+      svg(page, artFor(page)),
+      'Saved SVG differs from current script/materials: ' + page.id,
+    );
+  }
+  console.log('Verified current page SVGs');
 } else if (command === 'status') {
   console.log(config.pages.map((p) => `${p.id}: ${status(p)}`).join('\n'));
 } else if (command === 'build') {
@@ -976,5 +993,5 @@ if (command === 'layout') {
   );
 } else
   throw new Error(
-    'Use plan | check | layout PAGE [--apply] | candidate-panel ID FILE [--note TEXT] | accept PAGE FILE --reviewed | accept-panel ID FILE --reviewed | use-page ID --reviewed --reason TEXT | preview [PAGE] | review PAGE --speakers --faces --order --continuity | quality-plan | quality-review ID JSON | quality-repair ID | status | build | layers',
+    'Use plan | check | verify-output | layout PAGE [--apply] | candidate-panel ID FILE [--note TEXT] | accept PAGE FILE --reviewed | accept-panel ID FILE --reviewed | use-page ID --reviewed --reason TEXT | preview [PAGE] | review PAGE --speakers --faces --order --continuity | quality-plan | quality-review ID JSON | quality-repair ID | status | build | layers',
   );

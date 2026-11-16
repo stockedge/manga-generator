@@ -31,7 +31,7 @@ node cli/history.mjs bundle releases/my-story-intermediate-history.tar.gz
 
 自動警告は同じコマ内の読み戻りの候補を示す補助。人物の視線やコマ間のつながり、自然さは目視でレビューする。無言のコマでは動作・顔・余白で導線を検討する。
 
-手動で番号なしPNGを確認するときは、対象の `MANGA_PROJECT` を指定し、`node cli/export.mjs <workflowDir>/storyboards-unnumbered <ページID>` で現行SVGから書き出してから開く。`node cli/export.mjs storyboards` の出力先は番号付きネームの別フォルダーであり、既存の番号なしPNGは更新されない。ページ追加後は同じページIDでも内容が変わるため、ファイルが存在するだけでは現行版と判断しない。
+手動で番号なしPNGを確認するときは、対象の `MANGA_PROJECT` を指定し、まず `node cli/workflow.mjs plan` を実行する。その後、`node cli/export.mjs <workflowDir>/storyboards-unnumbered <ページID>` で現行SVGから書き出してから開く。`node cli/export.mjs storyboards` の出力先は番号付きネームの別フォルダーであり、既存の番号なしPNGは更新されない。ページ追加後は同じページIDでも内容が変わるため、ファイルが存在するだけでは現行版と判断しない。
 
 構図や手の演技を変更したら、`scene`・`action` だけでなく `beat`・`camera`・`state.hands`・`state.objects`・`production`・現在の参照役割も照合する。古い「手元だけ」「紐を握る」などの指定を残したまま新画像の確認へ進めない。隠れた握りを確認済みとせず、原作に不要な動作補足を外す場合は、関連する指定をそろえてから脚本・画像の独立レビューを取り直す。
 

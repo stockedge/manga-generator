@@ -781,6 +781,31 @@ try {
     () => run('use-page', '01-1', '--reviewed'),
     /Record replacement reason/,
   );
+  c.pages[0].panels[0].artworkCrop = [0, 0, 1024, 1536];
+  save(c);
+  const preservedOverride = fs.readFileSync(folder + '/assets/panels/01-1.png');
+  const preservedRecord = fs.readFileSync(folder + '/assets/panels/01-1.json');
+  assert.throws(
+    () =>
+      run(
+        'use-page',
+        '01-1',
+        '--reviewed',
+        '--reason',
+        'Synthetic incompatible crop',
+      ),
+    /artworkCrop/,
+  );
+  assert.deepEqual(
+    fs.readFileSync(folder + '/assets/panels/01-1.png'),
+    preservedOverride,
+  );
+  assert.deepEqual(
+    fs.readFileSync(folder + '/assets/panels/01-1.json'),
+    preservedRecord,
+  );
+  delete c.pages[0].panels[0].artworkCrop;
+  save(c);
   run('use-page', '01-1', '--reviewed', '--reason', 'Synthetic page fallback');
   assert.ok(!fs.existsSync(folder + '/assets/panels/01-1.png'));
   assert.ok(
@@ -1009,6 +1034,16 @@ try {
   draftPanel.artworkCrop = [0, 1000, 1024, 800];
   save(c);
   assert.throws(() => run('check'), /exceeds the source PNG/);
+  if (c.renderMode === 'panels' && !draftPanel.storyboardImage) {
+    fs.writeFileSync(folder + '/larger-crop-source.png', blankPNG(1024, 2048));
+    run(
+      'accept-panel',
+      draftPanel.id,
+      relative + '/larger-crop-source.png',
+      '--reviewed',
+    );
+    run('check');
+  }
   delete draftPanel.artworkCrop;
   save(c);
   run('plan');
@@ -1016,6 +1051,30 @@ try {
   assert.deepEqual(
     fs.readFileSync(folder + '/workflow/storyboards/page-01.svg'),
     fullDraftSVG,
+  );
+  const explicitLayout = relative + '/workflow/panels/page-reference.png';
+  fs.writeFileSync(path.join(root, explicitLayout), blankPNG());
+  const identityConfig = structuredClone(c);
+  identityConfig.renderMode = 'panels';
+  identityConfig.pages[0].panels[0].storyboardImage = explicitLayout;
+  identityConfig.pages[0].panels[0].references = [explicitLayout];
+  const identities = createGenerationJobs({
+    config: identityConfig,
+    local: (f) => path.join(root, f),
+    stateFor: () => ({}),
+    svg: () => '',
+  });
+  const beforeIdentity = identities.panelJob(
+    identityConfig.pages[0],
+    identityConfig.pages[0].panels[0],
+  ).fingerprint;
+  fs.writeFileSync(path.join(root, explicitLayout), blankPNG(512, 768));
+  assert.notEqual(
+    identities.panelJob(
+      identityConfig.pages[0],
+      identityConfig.pages[0].panels[0],
+    ).fingerprint,
+    beforeIdentity,
   );
   const otherDraft = relative + '/draft-v2.png';
   fs.writeFileSync(path.join(root, otherDraft), blankPNG());

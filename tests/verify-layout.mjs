@@ -176,6 +176,7 @@ try {
     'unused.txt',
     'job-reference.png',
     'actual-reference.png',
+    'log-only-reference.png',
   ];
   for (const file of researchFiles)
     fs.writeFileSync(path.join(fixture, research, file), exportedBytes);
@@ -189,6 +190,31 @@ try {
       generated: [{ references: [research + 'actual-reference.png'] }],
     }),
   );
+  fs.writeFileSync(
+    path.join(fixture, config.workflowDir, 'generation-log.json'),
+    JSON.stringify({
+      panels: [{ references: [{ file: research + 'log-only-reference.png' }] }],
+    }),
+  );
+  run('cli/assist.mjs', ['delivery', 'ready-delivery']);
+  const configPath = path.join(fixture, project);
+  const readyConfig = fs.readFileSync(configPath);
+  const changedConfig = JSON.parse(readyConfig.toString('utf8'));
+  changedConfig.pages[0].panels[0].dialogue[0].text += '変更';
+  fs.writeFileSync(configPath, JSON.stringify(changedConfig));
+  assert.throws(() => run('cli/assist.mjs', ['delivery', 'stale-script']));
+  fs.writeFileSync(configPath, readyConfig);
+  const adoptedPath = path.join(
+    fixture,
+    config.assetDir,
+    'panels',
+    config.pages[0].panels[0].id + '.png',
+  );
+  const adoptedBytes = fs.readFileSync(adoptedPath);
+  fs.appendFileSync(adoptedPath, 'changed');
+  assert.throws(() => run('cli/assist.mjs', ['delivery', 'stale-material']));
+  fs.writeFileSync(adoptedPath, adoptedBytes);
+
   run('cli/reproduce.mjs', ['freeze']);
   run('cli/reproduce.mjs');
   const lock = JSON.parse(
@@ -198,6 +224,12 @@ try {
     ),
   );
   assert.equal(lock.packageScope, 'distribution');
+  assert.ok(lock.outputs[config.outputDir + '/page-01.png.render.json']);
+  const outputSVG = path.join(fixture, config.outputDir, 'page-01.svg');
+  const currentSVG = fs.readFileSync(outputSVG);
+  fs.appendFileSync(outputSVG, 'stale');
+  assert.throws(() => run('cli/assist.mjs', ['delivery', 'old-svg']));
+  fs.writeFileSync(outputSVG, currentSVG);
   assert.ok(!lock.inputs[research + 'unused.txt']);
   for (const file of researchFiles.slice(1))
     assert.ok(

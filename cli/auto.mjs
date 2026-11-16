@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { validateGenerationEdit } from '../src/generation-edits.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
@@ -318,6 +319,7 @@ if (command === 'start') {
       );
       continue;
     }
+    validateGenerationEdit(record, (file) => fs.readFileSync(relative(file)));
     const expected = c.generation?.renderer || 'Codex built-in image_gen';
     assert.equal(
       record.renderer,

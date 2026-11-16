@@ -169,6 +169,94 @@ try {
       '--reason',
       'Synthetic blank fixture; no artwork quality is certified',
     );
+  const generatedBytes = Buffer.concat([
+    png,
+    Buffer.from('synthetic generated fixture'),
+  ]);
+  write('fixture/generated.png', generatedBytes);
+  for (const j of jobs) {
+    const request = JSON.parse(run('generation', 'prepare', j.id)).request;
+    run(
+      'generation',
+      'record',
+      j.id,
+      request,
+      path.join(folder, 'fixture/generated.png'),
+    );
+  }
+  const editedBytes = Buffer.concat([
+    png,
+    Buffer.from('synthetic external edit'),
+  ]);
+  write('fixture/edited.png', editedBytes);
+  write(
+    'fixture/edit-instruction.txt',
+    'Synthetic fixture: remove an unwanted mark from the white margin.',
+  );
+  run(
+    'generation',
+    'record-edit',
+    panel.id,
+    'fixture/generated.png',
+    'fixture/edited.png',
+    'fixture/edit-instruction.txt',
+  );
+  run(
+    'workflow',
+    'accept-panel',
+    panel.id,
+    path.join(folder, 'fixture/edited.png'),
+    '--reviewed',
+  );
+  for (const j of jobs)
+    run(
+      'workflow',
+      'accept-panel',
+      j.id,
+      path.join(folder, 'fixture/generated.png'),
+      '--reviewed',
+    );
+  run(
+    'workflow',
+    'accept-panel',
+    panel.id,
+    path.join(folder, 'fixture/edited.png'),
+    '--reviewed',
+  );
+  run('generation', 'compile');
+  const derivative = read('fixture/workflow/generation-log.json').panels.find(
+    (p) => p.panel === panel.id,
+  );
+  assert.equal(
+    derivative.imageHash,
+    crypto.createHash('sha256').update(editedBytes).digest('hex'),
+  );
+  assert.equal(
+    derivative.externalEdit.inputHash,
+    crypto.createHash('sha256').update(generatedBytes).digest('hex'),
+  );
+  const originalEvidence = fs.readFileSync(
+    path.join(folder, derivative.externalEdit.parentRecord),
+  );
+  fs.appendFileSync(
+    path.join(folder, derivative.externalEdit.parentRecord),
+    ' ',
+  );
+  assert.throws(
+    () => run('generation', 'compile'),
+    /External edit parent record changed/,
+  );
+  fs.writeFileSync(
+    path.join(folder, derivative.externalEdit.parentRecord),
+    originalEvidence,
+  );
+  run(
+    'workflow',
+    'accept-panel',
+    panel.id,
+    path.join(folder, config.references[0]),
+    '--reviewed',
+  );
   run('workflow', 'quality-plan');
   const quality = read(`fixture/workflow/quality/${panel.id}.template.json`);
   quality.observation =

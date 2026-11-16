@@ -84,6 +84,11 @@ if (command === 'freeze') {
     ),
     ...refs,
     ...actualRefs,
+    ...(fs.existsSync(config.workflowDir + '/generation-log.json')
+      ? JSON.parse(
+          fs.readFileSync(config.workflowDir + '/generation-log.json', 'utf8'),
+        ).panels.flatMap((p) => (p.references || []).map((r) => r.file))
+      : []),
     ...files(config.assetDir || 'assets/v2').filter(
       (file) =>
         process.argv.includes('--full-history') ||
@@ -93,7 +98,9 @@ if (command === 'freeze') {
     ),
     ...productionFiles,
   ];
-  const outputs = files(output).filter((f) => /\.(svg|html|png|pdf)$/.test(f));
+  const outputs = files(output).filter((f) =>
+    /\.(svg|html|png|pdf)$|\.png\.render\.json$/.test(f),
+  );
   fs.writeFileSync(
     lockFile,
     JSON.stringify(

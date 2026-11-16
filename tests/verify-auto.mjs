@@ -158,6 +158,7 @@ try {
     'src/production-preflight.mjs',
     'src/artwork-crop.mjs',
     'src/text-card.mjs',
+    'src/generation-edits.mjs',
     'src/lettering.mjs',
     'src/workspace.mjs',
     'src/runtime-files.mjs',

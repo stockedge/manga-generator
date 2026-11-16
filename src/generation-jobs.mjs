@@ -103,7 +103,11 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
       JSON.stringify(spec) +
         hash(svg(page, null, true)) +
         references
-          .filter((r) => !layoutReference(r))
+          .filter(
+            (r) =>
+              !layoutReference(r) ||
+              page.panels.some((p) => p.storyboardImage === r),
+          )
           .map((r) =>
             fs.existsSync(local(r))
               ? hash(fs.readFileSync(local(r)))
@@ -154,7 +158,7 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
             references,
           }) +
           references
-            .filter((f) => !layoutReference(f))
+            .filter((f) => !layoutReference(f) || p.storyboardImage === f)
             .map((f) =>
               fs.existsSync(local(f))
                 ? hash(fs.readFileSync(local(f)))

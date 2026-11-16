@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tarfile
 import xml.etree.ElementTree as ET
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw
@@ -19,7 +20,9 @@ project = os.environ.get("MANGA_PROJECT")
 assert project, "Select MANGA_PROJECT explicitly"
 config_path = (root / project).resolve()
 assert config_path.is_relative_to(root)
-config = json.loads(config_path.read_text(encoding="utf-8"))
+config_bytes = config_path.read_bytes()
+config = json.loads(config_bytes)
+config_hash = hashlib.sha256(config_bytes).hexdigest()
 mode, name, spec_file = sys.argv[1:4]
 assert name and all(c.isascii() and (c.isalnum() or c in "-_") for c in name), (
     "Invalid output name"
@@ -38,9 +41,6 @@ def sha(p):
     return digest.hexdigest()
 
 
-config_hash = sha(config_path)
-
-
 def local(value):
     assert isinstance(value, str) and not Path(value).is_absolute(), (
         "Use workspace-relative files"
@@ -50,16 +50,18 @@ def local(value):
     return p
 
 
-spec = json.loads(local(spec_file).read_text(encoding="utf-8"))
-inputs = {spec_file: sha(local(spec_file))}
+spec_bytes = local(spec_file).read_bytes()
+spec = json.loads(spec_bytes)
+inputs = {spec_file: hashlib.sha256(spec_bytes).hexdigest()}
 
 
-def image(file):
-    p = local(file)
-    inputs[file] = sha(p)
-    with Image.open(p) as im:
+def image(file, budget=25000000):
+    data = local(file).read_bytes()
+    inputs[file] = hashlib.sha256(data).hexdigest()
+    with Image.open(BytesIO(data)) as im:
         assert im.format == "PNG", "Expected PNG"
         size(list(im.size))
+        assert im.width * im.height <= budget, "PSD layer pixel budget exceeded"
         im.load()
         return im.convert("RGBA")
 
@@ -186,7 +188,9 @@ elif mode == "anthology":
     for completion_file in completions:
         p = local(completion_file)
         inputs[completion_file] = sha(p)
-        completion = json.loads(p.read_text(encoding="utf-8"))
+        completion_bytes = p.read_bytes()
+        inputs[completion_file] = hashlib.sha256(completion_bytes).hexdigest()
+        completion = json.loads(completion_bytes)
         assert completion["status"] == "complete", "Reuse completed works only"
         deliverables = completion["deliverables"]
         archives = [n for n in deliverables if n.endswith(".tar.gz")]
@@ -305,8 +309,13 @@ elif mode == "fit":
     scale = (min if method == "contain" else max)(
         target[0] / source.width, target[1] / source.height
     )
+    scaled_size = (
+        max(1, round(source.width * scale)),
+        max(1, round(source.height * scale)),
+    )
+    size(list(scaled_size))
     scaled = source.resize(
-        (max(1, round(source.width * scale)), max(1, round(source.height * scale))),
+        scaled_size,
         Image.Resampling.LANCZOS,
     )
     canvas = Image.new("RGBA", target, "white")
@@ -329,8 +338,9 @@ elif mode == "layout":
     assert page, "Unknown page"
     source = str(Path(config["outputDir"]) / f"page-{page['id']}.svg")
     file = local(source)
-    inputs[source] = sha(file)
-    tree = ET.parse(file)
+    source_bytes = file.read_bytes()
+    inputs[source] = hashlib.sha256(source_bytes).hexdigest()
+    tree = ET.ElementTree(ET.fromstring(source_bytes))
     original = tree.getroot()
     ns = "http://www.w3.org/2000/svg"
 
@@ -544,9 +554,11 @@ elif mode == "psd":
     assert isinstance(layers, list) and 1 <= len(layers) <= 64
     psd = PSDImage.new(mode="RGB", size=dimensions, depth=8)
     expected = []
+    remaining_pixels = 50000000
     for entry in layers:
         assert isinstance(entry.get("name"), str) and entry["name"].strip()
-        pixels = image(entry["file"])
+        pixels = image(entry["file"], remaining_pixels)
+        remaining_pixels -= pixels.width * pixels.height
         left = entry.get("x", 0)
         top = entry.get("y", 0)
         assert type(left) is int and type(top) is int and min(left, top) >= 0
@@ -596,8 +608,9 @@ elif mode == "unpack":
 
     file = local(spec["source"])
     assert file.stat().st_size <= 268435456, "PSD file budget exceeded"
-    inputs[spec["source"]] = sha(file)
-    psd = PSDImage.open(file)
+    psd_bytes = file.read_bytes()
+    inputs[spec["source"]] = hashlib.sha256(psd_bytes).hexdigest()
+    psd = PSDImage.open(BytesIO(psd_bytes))
     assert psd.color_mode.name == "RGB" and psd.depth == 8 and 1 <= len(psd) <= 64, (
         "Only RGB8 pixel PSD supported"
     )

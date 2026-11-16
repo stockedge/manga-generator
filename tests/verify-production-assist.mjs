@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createTemporary } from '../src/temporary.mjs';
 import { copyRuntime } from './support.mjs';
 import { root } from '../src/workspace.mjs';
@@ -86,14 +86,12 @@ const run = (...args) =>
     stdio: 'pipe',
   });
 const original = fs.readFileSync(w + '/workflow.json');
-for (const mode of ['index', 'intake', 'cards', 'spreads', 'delivery'])
-  run(mode, mode);
-assert.equal(
-  JSON.parse(
-    fs.readFileSync(w + '/workflow/assistance/delivery/delivery.json', 'utf8'),
-  ).readyToPublish,
-  false,
+for (const mode of ['index', 'intake', 'cards', 'spreads']) run(mode, mode);
+assert.throws(
+  () => run('delivery', 'unready'),
+  /Page is not ready|AssertionError/,
 );
+assert.ok(!fs.existsSync(w + '/workflow/assistance/unready'));
 assert.throws(() => run('cards', 'cards'));
 assert.throws(() => run('cards', '../escape'));
 run('external', 'edit', 'p1');
@@ -253,6 +251,55 @@ if (process.env.MANGA_PYTHON) {
     ],
     { cwd: temp.folder, windowsHide: true },
   );
+  execFileSync(
+    process.env.MANGA_PYTHON,
+    [
+      '-c',
+      [
+        'import runpy, sys, json, hashlib',
+        'from pathlib import Path',
+        'from unittest.mock import patch',
+        'from PIL import Image',
+        "spec=Path('works/fixture/snapshot.json')",
+        "spec.write_text(json.dumps({'source':'works/fixture/red.png','size':[20,20],'method':'contain','reason':'snapshot regression'}),encoding='utf-8')",
+        'captured=spec.read_bytes()',
+        "source=Path('works/fixture/red.png'); source_bytes=source.read_bytes()",
+        "config=Path('works/fixture/workflow.json'); config_bytes=config.read_bytes()",
+        'original_read=Path.read_bytes; original_open=Image.open',
+        'def read_once(p):',
+        '    data=original_read(p)',
+        "    if p.resolve()==spec.resolve(): p.write_text('{}',encoding='utf-8')",
+        '    return data',
+        'def decode_snapshot(file,*args,**kwargs):',
+        "    Image.new('RGBA',(20,20),'blue').save(source)",
+        '    return original_open(file,*args,**kwargs)',
+        "sys.argv=['scripts/editor-exchange.py','fit','snapshot','works/fixture/snapshot.json']",
+        "with patch.object(Path,'read_bytes',read_once), patch.object(Image,'open',decode_snapshot): runpy.run_path('scripts/editor-exchange.py',run_name='__main__')",
+        "manifest=json.loads(Path('works/fixture/workflow/assistance/snapshot/result.json').read_text(encoding='utf-8'))",
+        "assert manifest['inputs']['works/fixture/snapshot.json']==hashlib.sha256(captured).hexdigest()",
+        "assert manifest['inputs']['works/fixture/red.png']==hashlib.sha256(source_bytes).hexdigest()",
+        "assert original_open('works/fixture/workflow/assistance/snapshot/fitted.png').getpixel((0,0))==(255,0,0,255)",
+        'source.write_bytes(source_bytes)',
+        'spec.write_bytes(captured)',
+        'def change_config(p):',
+        '    data=original_read(p)',
+        "    if p.resolve()==config.resolve(): p.write_bytes(config_bytes+b' ')",
+        '    return data',
+        "sys.argv=['scripts/editor-exchange.py','fit','changed-config-snapshot','works/fixture/snapshot.json']",
+        'try:',
+        "    with patch.object(Path,'read_bytes',change_config): runpy.run_path('scripts/editor-exchange.py',run_name='__main__')",
+        "    raise RuntimeError('Changed configuration was accepted')",
+        'except AssertionError as error:',
+        "    assert 'Canonical configuration changed' in str(error)",
+        'finally: config.write_bytes(config_bytes)',
+      ].join('\n'),
+    ],
+    {
+      cwd: temp.folder,
+      env: { ...process.env, MANGA_PROJECT: 'works/fixture/workflow.json' },
+      windowsHide: true,
+    },
+  );
   run(
     'mask',
     'mask',
@@ -300,77 +347,149 @@ if (process.env.MANGA_PYTHON) {
       }),
     ),
   );
-  run(
-    'psd',
-    'psd',
-    spec('psd', {
-      size: [20, 20],
-      layers: [
-        { name: 'Background', file: 'works/fixture/red.png' },
-        { name: 'Foreground', file: 'works/fixture/alpha.png' },
+  const hasPSD = (() => {
+    try {
+      execFileSync(process.env.MANGA_PYTHON, ['-c', 'import psd_tools'], {
+        stdio: 'pipe',
+        windowsHide: true,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  if (hasPSD) {
+    execFileSync(
+      process.env.MANGA_PYTHON,
+      [
+        '-c',
+        "from PIL import Image; Image.new('RGB',(1000,8000),'white').save('works/fixture/tall.png')",
       ],
-    }),
-  );
-  run(
-    'unpack',
-    'unpack',
-    spec('unpack', {
-      source: 'works/fixture/workflow/assistance/psd/layers.psd',
-    }),
-  );
-  const layers = JSON.parse(
-    fs.readFileSync(w + '/workflow/assistance/unpack/result.json', 'utf8'),
-  ).result.layers;
-  execFileSync(
-    process.env.MANGA_PYTHON,
-    [
-      '-c',
-      "from psd_tools import PSDImage; p=PSDImage.open('works/fixture/workflow/assistance/psd/layers.psd'); p[1].fill_opacity=128; p.save('works/fixture/unsupported.psd')",
-    ],
-    { cwd: temp.folder, windowsHide: true },
-  );
-  assert.throws(
-    () =>
+      { cwd: temp.folder, windowsHide: true },
+    );
+    assert.throws(
+      () =>
+        run(
+          'fit',
+          'opposing-aspects',
+          spec('opposing-aspects', {
+            source: 'works/fixture/tall.png',
+            size: [8000, 1000],
+            method: 'crop',
+            reason: 'budget regression',
+          }),
+        ),
+      /budget|Invalid size/,
+    );
+    const psdAvailable =
+      spawnSync(process.env.MANGA_PYTHON, ['-c', 'import psd_tools'], {
+        windowsHide: true,
+        stdio: 'pipe',
+      }).status === 0;
+    if (psdAvailable) {
+      execFileSync(
+        process.env.MANGA_PYTHON,
+        [
+          '-c',
+          "from PIL import Image; Image.new('RGBA',(5000,5000),'white').save('works/fixture/budget-layer.png')",
+        ],
+        { cwd: temp.folder, windowsHide: true },
+      );
+      assert.throws(
+        () =>
+          run(
+            'psd',
+            'over-budget',
+            spec('over-budget', {
+              size: [5000, 5000],
+              layers: Array.from({ length: 3 }, (_, i) => ({
+                name: 'layer-' + i,
+                file: 'works/fixture/budget-layer.png',
+              })),
+            }),
+          ),
+        /PSD layer pixel budget/,
+      );
+
+      run(
+        'psd',
+        'psd',
+        spec('psd', {
+          size: [20, 20],
+          layers: [
+            { name: 'Background', file: 'works/fixture/red.png' },
+            { name: 'Foreground', file: 'works/fixture/alpha.png' },
+          ],
+        }),
+      );
       run(
         'unpack',
-        'unsupported',
-        spec('unsupported', { source: 'works/fixture/unsupported.psd' }),
-      ),
-    /fill opacity/,
-  );
-  assert.deepEqual(
-    layers.map((x) => x.name),
-    ['Background', 'Foreground'],
-  );
-  execFileSync(
-    process.env.MANGA_PYTHON,
-    [
-      '-c',
-      "from psd_tools import PSDImage; from PIL import Image; p=PSDImage.open('works/fixture/workflow/assistance/psd/layers.psd'); p[1].update_mask(Image.new('L',(20,20),128)); p.save('works/fixture/masked.psd')",
-    ],
-    { cwd: temp.folder, windowsHide: true },
-  );
-  run(
-    'unpack',
-    'masked',
-    spec('masked', { source: 'works/fixture/masked.psd' }),
-  );
-  execFileSync(
-    process.env.MANGA_PYTHON,
-    [
-      '-c',
-      "from PIL import Image; im=Image.open('works/fixture/workflow/assistance/masked/layer-01.png').convert('RGBA'); assert im.getpixel((10,10))[3]==128",
-    ],
-    { cwd: temp.folder, windowsHide: true },
-  );
-  execFileSync(
-    process.env.MANGA_PYTHON,
-    [
-      '-c',
-      "from PIL import Image; a=Image.open('works/fixture/red.png').convert('RGBA'); b=Image.open('works/fixture/alpha.png').convert('RGBA'); expected=Image.alpha_composite(a,b); actual=Image.open('works/fixture/workflow/assistance/unpack/composite.png').convert('RGBA'); assert expected.tobytes()==actual.tobytes()",
-    ],
-    { cwd: temp.folder, windowsHide: true },
-  );
+        'unpack',
+        spec('unpack', {
+          source: 'works/fixture/workflow/assistance/psd/layers.psd',
+        }),
+      );
+      const layers = JSON.parse(
+        fs.readFileSync(w + '/workflow/assistance/unpack/result.json', 'utf8'),
+      ).result.layers;
+      execFileSync(
+        process.env.MANGA_PYTHON,
+        [
+          '-c',
+          "from psd_tools import PSDImage; p=PSDImage.open('works/fixture/workflow/assistance/psd/layers.psd'); p[1].fill_opacity=128; p.save('works/fixture/unsupported.psd')",
+        ],
+        { cwd: temp.folder, windowsHide: true },
+      );
+      assert.throws(
+        () =>
+          run(
+            'unpack',
+            'unsupported',
+            spec('unsupported', { source: 'works/fixture/unsupported.psd' }),
+          ),
+        /fill opacity/,
+      );
+      assert.deepEqual(
+        layers.map((x) => x.name),
+        ['Background', 'Foreground'],
+      );
+      execFileSync(
+        process.env.MANGA_PYTHON,
+        [
+          '-c',
+          "from psd_tools import PSDImage; from PIL import Image; p=PSDImage.open('works/fixture/workflow/assistance/psd/layers.psd'); p[1].update_mask(Image.new('L',(20,20),128)); p.save('works/fixture/masked.psd')",
+        ],
+        { cwd: temp.folder, windowsHide: true },
+      );
+      run(
+        'unpack',
+        'masked',
+        spec('masked', { source: 'works/fixture/masked.psd' }),
+      );
+      execFileSync(
+        process.env.MANGA_PYTHON,
+        [
+          '-c',
+          "from PIL import Image; im=Image.open('works/fixture/workflow/assistance/masked/layer-01.png').convert('RGBA'); assert im.getpixel((10,10))[3]==128",
+        ],
+        { cwd: temp.folder, windowsHide: true },
+      );
+      execFileSync(
+        process.env.MANGA_PYTHON,
+        [
+          '-c',
+          "from PIL import Image; a=Image.open('works/fixture/red.png').convert('RGBA'); b=Image.open('works/fixture/alpha.png').convert('RGBA'); expected=Image.alpha_composite(a,b); actual=Image.open('works/fixture/workflow/assistance/unpack/composite.png').convert('RGBA'); assert expected.tobytes()==actual.tobytes()",
+        ],
+        { cwd: temp.folder, windowsHide: true },
+      );
+    } else
+      console.log(
+        'SKIP: PSD subset (psd-tools unavailable); Pillow checks still run',
+      );
+  } else
+    console.log(
+      'SKIP: PSD tests (psd-tools unavailable); Pillow tests continue',
+    );
   config.pages[0].panels = Array.from({ length: 4 }, (_, i) => ({
     id: 'p' + i,
     rect: [16, 16 + i * 340, 900, 320],
