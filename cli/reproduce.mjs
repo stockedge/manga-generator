@@ -63,13 +63,9 @@ if (command === 'freeze') {
         (j) => j.references,
       )
     : [];
-  // Review renders are derivatives, not production inputs; retain their source and review records.
+  // Review records hash these renders, so portable builds must retain them.
   const productionFiles = files(config.workflowDir || 'workflow').filter(
-    (f) =>
-      !(
-        /\/review\/page-\d{2}\.(svg|png)$/.test(f) ||
-        (f.includes('/quality/') && f.endsWith('.png'))
-      ),
+    (f) => !(f.includes('/quality/') && f.endsWith('.png')),
   );
   const inputs = [
     configFile,
@@ -81,7 +77,11 @@ if (command === 'freeze') {
     'README.md',
     'AGENTS.md',
     ...runtimeFiles(root),
-    ...files('docs'),
+    ...files('docs').filter(
+      (file) =>
+        process.argv.includes('--full-history') ||
+        !file.startsWith('docs/research/'),
+    ),
     ...refs,
     ...actualRefs,
     ...files(config.assetDir || 'assets/v2').filter(

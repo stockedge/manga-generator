@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { createTemporary } from '../src/temporary.mjs';
 import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 
 import { root } from '../src/workspace.mjs';
 const chrome =
@@ -112,6 +113,10 @@ for (const page of items.filter((p) => !selection || p.id === selection)) {
     `page-${page.id}${scale === 1 ? '' : '-' + scale + 'x'}.png`,
   );
   const cache = createTemporary('browser');
+  const svgHash = crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(input))
+    .digest('hex');
   const temporary = path.join(cache.folder, 'screenshot.png');
   // A complete fresh screenshot is the result; Chrome shutdown is not.
   const bytes = await screenshot(
@@ -135,11 +140,35 @@ for (const page of items.filter((p) => !selection || p.id === selection)) {
     cache,
   );
   const staging = output + '.' + path.basename(cache.folder) + '.tmp.png';
+  const receiptStaging = staging + '.render.json';
   try {
+    assert.equal(
+      crypto.createHash('sha256').update(fs.readFileSync(input)).digest('hex'),
+      svgHash,
+      'SVG changed while rendering; export again',
+    );
     fs.writeFileSync(staging, bytes, { flag: 'wx' });
+    fs.writeFileSync(
+      receiptStaging,
+      JSON.stringify(
+        {
+          svgHash,
+          pngHash: crypto.createHash('sha256').update(bytes).digest('hex'),
+          scale,
+          width,
+          height,
+        },
+        null,
+        2,
+      ),
+      { flag: 'wx' },
+    );
+    // Publish provenance first: interrupted updates fail closed, even on first export.
+    fs.renameSync(receiptStaging, output + '.render.json');
     fs.renameSync(staging, output);
   } finally {
     fs.rmSync(staging, { force: true });
+    fs.rmSync(receiptStaging, { force: true });
   }
   console.log(`Exported page ${page.id}`);
 }

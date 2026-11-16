@@ -15,6 +15,12 @@ import {
 import { requireReview } from '../src/stage-reviews.mjs';
 import { requireDesignSeal } from '../src/review-progress.mjs';
 import { renderStoryboardSketch } from '../src/storyboard-sketch.mjs';
+import { cropRectangle, renderArtworkImage } from '../src/artwork-crop.mjs';
+import { inspectProduction } from '../src/production-preflight.mjs';
+import {
+  validateSoundEffects,
+  renderSoundEffects,
+} from '../src/sound-effects.mjs';
 
 import {
   columns,
@@ -64,6 +70,28 @@ const { prompt, job, panelJob, layoutReference } = createGenerationJobs({
   svg,
 });
 const { archive, saveAsset } = createAssets({ config, local, assetDir });
+function warnComposition(pageId, panelId) {
+  const report = inspectProduction(config, { root });
+  const lines = report.panels
+    .filter(
+      (p) =>
+        (!pageId || p.page === pageId) && (!panelId || p.panel === panelId),
+    )
+    .flatMap((p) =>
+      p.compositionIssues.map((issue) => `${p.page}/${p.panel}: ${issue}`),
+    );
+  lines.push(
+    ...report.pages
+      .filter((p) => !pageId || p.page === pageId)
+      .flatMap((p) => p.issues.map((issue) => `${p.page}: ${issue}`)),
+  );
+  if (lines.length)
+    process.stderr.write(
+      '構図の要確認（機械検査の成功は目視合格ではありません）:\n' +
+        lines.join('\n') +
+        '\n',
+    );
+}
 function validate(data = config) {
   assert.ok(Array.isArray(data.pages) && data.pages.length, 'No pages');
   const panelIds = new Set();
@@ -99,19 +127,54 @@ function validate(data = config) {
     assert.match(page.id, /^\d{2}$/);
     assert.ok(!ids.has(page.id));
     ids.add(page.id);
-    assert.ok(page.panels.length >= 2 && page.panels.length <= 6);
+    assert.ok(
+      page.panels.length >= 2 && page.panels.length <= 8,
+      'Each page must have 2 to 8 panels',
+    );
     page.panels.forEach((p, i) => {
       stateFor(page, p);
       assert.match(p.id, /^[a-zA-Z0-9_-]+$/);
       assert.ok(!panelIds.has(p.id), 'Duplicate panel ID');
       panelIds.add(p.id);
       const [x, y, w, h] = p.rect;
+      cropRectangle(p.artworkCrop);
+      if (p.storyboardImage !== undefined) {
+        assert.ok(
+          typeof p.storyboardImage === 'string' &&
+            !/^[a-z][a-z0-9+.-]*:|^[/\\]/i.test(p.storyboardImage),
+          'storyboardImage must be a local project-relative PNG',
+        );
+        const draft = imageFile(local(p.storyboardImage));
+        cropRectangle(p.artworkCrop, draft);
+        assert.ok(
+          draft.readUInt32BE(16) > 0 && draft.readUInt32BE(20) > 0,
+          'storyboardImage must have positive dimensions',
+        );
+        assert.ok(
+          Array.isArray(p.references) &&
+            p.references.includes(p.storyboardImage),
+          'storyboardImage must be explicitly bound in panel.references',
+        );
+      } else if (p.artworkCrop !== undefined) {
+        const adopted = path.join(root, assetDir, 'panels', `${p.id}.png`);
+        if (fs.existsSync(adopted))
+          cropRectangle(p.artworkCrop, imageFile(adopted));
+      }
       if (p.storyboardSketch !== undefined)
         renderStoryboardSketch(p.storyboardSketch, p.rect, 'validate-sketch', {
           rough: true,
         });
       for (const [id, a] of Object.entries(p.speakers || {})) {
         assert.ok(Object.hasOwn(cast, id), 'Unknown actor');
+        if (a.offscreenEdge !== undefined)
+          assert.ok(
+            a.kind === 'offscreen' &&
+              cast[id]?.kind !== 'caption' &&
+              ['left', 'right'].includes(a.offscreenEdge) &&
+              a.anchor === undefined &&
+              a.face === undefined,
+            'offscreenEdge requires an offscreen voice without a face or mouth anchor',
+          );
         if (a.kind !== 'offscreen') {
           assert.ok(
             a.anchor?.length === 2 && a.anchor.every(Number.isFinite),
@@ -277,6 +340,7 @@ function validate(data = config) {
             assert.ok(!overlap(b, c), 'Balloons overlap: ' + p.id),
           ),
       );
+      validateSoundEffects(p, tailGeometry);
     });
   }
 }
@@ -299,13 +363,17 @@ function svg(page, art, rough = false, layer = 'all', guides = true) {
         ? `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${sx} ${sy} ${sw} ${sh}" preserveAspectRatio="xMidYMid meet"><defs><clipPath id="p${i}"><rect x="${sx}" y="${sy}" width="${sw}" height="${sh}"/></clipPath></defs><use href="#page-source" clip-path="url(#p${i})"/></svg>`
         : Object.entries(p.speakers || {})
             .map(([id, s]) =>
-              s.kind === 'offscreen'
+              s.kind === 'offscreen' || (rough && !guides)
                 ? ''
-                : `${s.face ? `<rect x="${s.face[0]}" y="${s.face[1]}" width="${s.face[2]}" height="${s.face[3]}" fill="${rough && !art && p.storyboardSketch ? 'none' : '#f5f5f5'}" stroke="#bbb"/>` : ''}<circle cx="${s.anchor[0]}" cy="${s.anchor[1]}" r="5" fill="#999"/><text x="${s.anchor[0] + 10}" y="${s.anchor[1]}" font-size="18">${xml(id)}</text>`,
+                : `${s.face ? `<rect x="${s.face[0]}" y="${s.face[1]}" width="${s.face[2]}" height="${s.face[3]}" fill="${rough && !art && (p.storyboardSketch || p.storyboardImage) ? 'none' : '#f5f5f5'}" stroke="#bbb"/>` : ''}<circle cx="${s.anchor[0]}" cy="${s.anchor[1]}" r="5" fill="#999"/><text x="${s.anchor[0] + 10}" y="${s.anchor[1]}" font-size="18">${xml(id)}</text>`,
             )
             .join('');
       const override = path.join(root, assetDir, 'panels', `${p.id}.png`);
       const record = path.join(root, assetDir, 'panels', `${p.id}.json`);
+      assert.ok(
+        p.artworkCrop === undefined || !art || fs.existsSync(override),
+        'artworkCrop requires a panel PNG override, not a page-source image',
+      );
       let material = picture;
       if ((art || (panelsOnly && !rough)) && fs.existsSync(override)) {
         assert.ok(fs.existsSync(record), 'Panel override has no review record');
@@ -320,9 +388,12 @@ function svg(page, art, rough = false, layer = 'all', guides = true) {
           hash(fs.readFileSync(override)),
           'Panel image modified after review',
         );
-        material = `<image href="data:image/png;base64,${fs.readFileSync(override).toString('base64')}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
+        material = renderArtworkImage(fs.readFileSync(override), p);
       }
-      if (rough && !art && p.storyboardSketch)
+      if (rough && !art && p.storyboardImage)
+        material =
+          renderArtworkImage(imageFile(local(p.storyboardImage)), p) + material;
+      else if (rough && !art && p.storyboardSketch)
         material =
           renderStoryboardSketch(
             p.storyboardSketch,
@@ -337,7 +408,8 @@ function svg(page, art, rough = false, layer = 'all', guides = true) {
         (layer === 'artwork'
           ? ''
           : p.dialogue.map((d) => balloonMask(p, d)).join('')) +
-        p.dialogue.map((d) => balloon(p, d)).join('');
+        p.dialogue.map((d) => balloon(p, d)).join('') +
+        renderSoundEffects(p);
       return (
         (layer === 'lettering' ? '' : material) +
         (layer === 'artwork' ? '' : lettering) +
@@ -494,6 +566,7 @@ if (command === 'layout') {
   console.log(
     `OK: ${config.pages.length} pages, ${config.pages.reduce((n, p) => n + p.panels.length, 0)} panels; geometry, speakers and typography`,
   );
+  warnComposition();
 } else if (command === 'plan') {
   fs.mkdirSync(path.join(dir, 'reading-flow'), { recursive: true });
   const flow = config.pages.map((page) => readingFlow(page, box));
@@ -649,7 +722,7 @@ if (command === 'layout') {
   const p = page.panels.find((p) => p.id === process.argv[3]);
   const j = panelJob(page, p);
   const file = path.resolve(process.argv[4]);
-  imageFile(file);
+  cropRectangle(p.artworkCrop, imageFile(file));
   assert.ok(
     process.argv.includes('--reviewed'),
     'Inspect panel before --reviewed',
@@ -669,6 +742,7 @@ if (command === 'layout') {
     },
   );
   console.log(`Accepted panel ${p.id}`);
+  warnComposition(page.id, p.id);
 } else if (command === 'accept') {
   assert.ok(
     !panelsOnly,
@@ -718,6 +792,7 @@ if (command === 'layout') {
     },
   );
   console.log(`Accepted ${page.id}`);
+  warnComposition(page.id);
 } else if (command === 'use-page') {
   assert.ok(!panelsOnly, 'use-page requires page render mode');
   const page = config.pages.find((page) =>

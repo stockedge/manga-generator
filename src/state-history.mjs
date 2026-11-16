@@ -168,8 +168,16 @@ export function checkpoint(root, work, label = 'manual') {
     const stamp = [stat.size, stat.mtimeNs, stat.ctimeNs].map(String).join(':');
     let hash = cache[name]?.stamp === stamp ? cache[name].hash : null;
     let object = hash && path.join(store, 'objects', hash.slice(0, 2), hash);
+    let size = Number(stat.size),
+      cacheable = true;
     if (!hash || !fs.existsSync(object)) {
       const bytes = fs.readFileSync(file);
+      size = bytes.length;
+      const after = fs.statSync(file, { bigint: true });
+      // Live logs can grow during capture; save the bytes but never cache a stale stamp.
+      cacheable =
+        [after.size, after.mtimeNs, after.ctimeNs].map(String).join(':') ===
+          stamp && BigInt(size) === stat.size;
       hash = digest(bytes);
       object = path.join(store, 'objects', hash.slice(0, 2), hash);
       fs.mkdirSync(path.dirname(object), { recursive: true });
@@ -187,11 +195,11 @@ export function checkpoint(root, work, label = 'manual') {
     }
     assert.equal(
       fs.statSync(object).size,
-      Number(stat.size),
+      size,
       'Damaged history object: ' + name,
     );
-    entries[name] = { hash, size: Number(stat.size) };
-    nextCache[name] = { stamp, hash };
+    entries[name] = { hash, size };
+    if (cacheable) nextCache[name] = { stamp, hash };
   }
   const stateHash = digest(JSON.stringify(entries));
   const latestFile = path.join(folder, 'latest.json');

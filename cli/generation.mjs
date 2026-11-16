@@ -34,7 +34,9 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
   );
   requireReview(root, c, configFile, 'storyboard', reviewPage.id);
   if (c.productionPreflight?.required && mode === 'prepare') {
-    const entry = inspectProduction(c).panels.find((p) => p.panel === id);
+    const entry = inspectProduction(c, { root }).panels.find(
+      (p) => p.panel === id,
+    );
     assert.ok(
       entry && !entry.issues.length,
       'Resolve production preflight before image generation: ' +
@@ -42,6 +44,17 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
         ': ' +
         entry?.issues.join('; '),
     );
+  }
+  if (mode === 'prepare') {
+    const audit = inspectProduction(c, { root });
+    const composition = audit.panels.find((p) => p.panel === id);
+    for (const warning of composition?.compositionIssues || [])
+      console.error('Composition review needed: ' + id + ': ' + warning);
+    for (const warning of audit.pages.find((p) => p.page === reviewPage.id)
+      ?.issues || [])
+      console.error(
+        'Page composition review needed: ' + reviewPage.id + ': ' + warning,
+      );
   }
   const editing = mode === 'prepare-edit';
   let prompt = editing

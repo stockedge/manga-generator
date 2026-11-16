@@ -37,6 +37,7 @@ try {
   }
   fs.cpSync(path.join(root, 'docs'), path.join(fixture, 'docs'), {
     recursive: true,
+    filter: (file) => file !== path.join(root, 'docs', 'research'),
   });
   const project = 'works/layout-check/workflow.json';
   const run = (file, args = [], cwd = fixture) =>
@@ -167,6 +168,27 @@ try {
     path.join(fixture, config.assetDir, 'candidates', 'unused.png'),
     'unused candidate',
   );
+  const reviewPng = config.workflowDir + '/review/page-01.png';
+  fs.copyFileSync(exported, path.join(fixture, reviewPng));
+  const research = 'docs/research/';
+  fs.mkdirSync(path.join(fixture, research), { recursive: true });
+  const researchFiles = [
+    'unused.txt',
+    'job-reference.png',
+    'actual-reference.png',
+  ];
+  for (const file of researchFiles)
+    fs.writeFileSync(path.join(fixture, research, file), exportedBytes);
+  const jobFile = path.join(fixture, config.workflowDir, 'panel-jobs.json');
+  const referencedJobs = JSON.parse(fs.readFileSync(jobFile, 'utf8'));
+  referencedJobs[0].references.push(research + 'job-reference.png');
+  fs.writeFileSync(jobFile, JSON.stringify(referencedJobs));
+  fs.writeFileSync(
+    path.join(fixture, config.workflowDir, 'reaction-generation.json'),
+    JSON.stringify({
+      generated: [{ references: [research + 'actual-reference.png'] }],
+    }),
+  );
   run('cli/reproduce.mjs', ['freeze']);
   run('cli/reproduce.mjs');
   const lock = JSON.parse(
@@ -176,6 +198,35 @@ try {
     ),
   );
   assert.equal(lock.packageScope, 'distribution');
+  assert.ok(!lock.inputs[research + 'unused.txt']);
+  for (const file of researchFiles.slice(1))
+    assert.ok(
+      lock.inputs[research + file],
+      'Explicit research reference missing',
+    );
+  fs.appendFileSync(
+    path.join(fixture, research, 'unused.txt'),
+    'unrelated edit',
+  );
+  run('cli/reproduce.mjs', ['check']);
+  for (const file of [
+    'docs/AUTOMATIC.md',
+    ...researchFiles.slice(1).map((file) => research + file),
+  ]) {
+    const full = path.join(fixture, file);
+    const before = fs.readFileSync(full);
+    fs.appendFileSync(full, 'synthetic tamper');
+    assert.throws(
+      () => run('cli/reproduce.mjs', ['check']),
+      /Changed saved input/,
+    );
+    fs.writeFileSync(full, before);
+  }
+  run('cli/reproduce.mjs', ['check']);
+  assert.ok(
+    lock.inputs[reviewPng],
+    'Frozen reviews need their exact PNG input',
+  );
   assert.ok(!lock.inputs[config.assetDir + '/history/unused.png']);
   assert.ok(!lock.inputs[config.assetDir + '/candidates/unused.png']);
   for (const file of runtimeFiles(fixture))
@@ -191,6 +242,11 @@ try {
     fixture,
     'releases',
     fs.readdirSync(path.join(fixture, 'releases'))[0],
+  );
+  assert.deepEqual(
+    fs.readFileSync(path.join(bundle, reviewPng)),
+    exportedBytes,
+    'Portable release must preserve the exact reviewed image',
   );
   execFileSync(process.execPath, [path.join(bundle, 'cli/reproduce.mjs')], {
     cwd: path.dirname(fixture),
@@ -282,6 +338,11 @@ try {
     ),
   );
   assert.equal(fullLock.packageScope, 'production');
+  for (const file of researchFiles)
+    assert.ok(
+      fullLock.inputs[research + file],
+      'Full history must retain research',
+    );
   assert.ok(fullLock.inputs[config.assetDir + '/history/unused.png']);
   assert.ok(fullLock.inputs[config.assetDir + '/candidates/unused.png']);
   run('cli/reproduce.mjs', ['bundle', '--compressed']);

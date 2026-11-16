@@ -52,6 +52,16 @@ for (const [i, u] of episodes.entries()) {
   const paragraphs = [...body.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g)].map((m) =>
     decode(
       m[1]
+        // Keep semantic readings as source annotations, without fallback parentheses.
+        .replace(/<ruby\b[^>]*>([\s\S]*?)<\/ruby>/gi, (_, ruby) => {
+          const reading = [...ruby.matchAll(/<rt\b[^>]*>([\s\S]*?)<\/rt>/gi)]
+            .map((r) => r[1].replace(/<[^>]*>/g, ''))
+            .join('');
+          const base = ruby
+            .replace(/<(rt|rp)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+            .replace(/<[^>]*>/g, '');
+          return base + (reading ? `《${reading}》` : '');
+        })
         .replace(/<rt\b[^>]*>[\s\S]*?<\/rt>/g, '')
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<[^>]*>/g, ''),
@@ -83,7 +93,7 @@ fs.writeFileSync(
       retrievedAt: new Date().toISOString(),
       scope: 'All public episodes linked in work table of contents',
       episodes: parts.map(({ text, ...p }) => ({ ...p, length: text.length })),
-      ruby: 'Ruby readings omitted; base text retained',
+      ruby: 'Ruby base and readings retained as base《reading》; fallback rp parentheses omitted',
     },
     null,
     2,

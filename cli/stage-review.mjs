@@ -30,6 +30,7 @@ if (mode === 'mode') {
     ...config.productionReview,
     required: true,
     designSealRequired: true,
+    readingProtocol: 'two-phase-v1',
   };
   fs.writeFileSync(local(configFile), JSON.stringify(config, null, 2));
   console.log(
@@ -115,6 +116,15 @@ if (mode === 'mode') {
   console.log('Saved immutable image-only first reading');
 } else if (mode === 'prepare') {
   const request = captureReview(root, config, configFile, stage, target);
+  const readingScope = ['storyboard', 'lettering', 'final'].includes(stage)
+    ? ' For readingReview.predictedOrder, return exactly one entry for each target panel in this unordered ID set: ' +
+      JSON.stringify(
+        request.base.script.pages
+          .flatMap((page) => page.panels.map((p) => p.id))
+          .sort(),
+      ) +
+      '. Include silent target panels with dialogue:[]. Do not add boundary or dependency panels to predictedOrder. Use readingReview.transitions for exactly the supplied requiredTransitions pairs, including boundary pairs; discuss other dependency context in observations. This set defines response scope, not the predicted reading sequence; preserve the actual observed scan.'
+    : '';
   const file =
     folder +
     '/requests/' +
@@ -138,14 +148,21 @@ if (mode === 'mode') {
           firstReading: request.base.firstReading,
           firstReadingHash: request.base.firstReadingHash,
           comparisonInstructions:
-            'Compare the immutable natural scan above with the intended script and order. Keep the original scan unchanged. Return readingReview.firstReadingHash and readingReview.comparison explaining agreements, skips and ambiguities; unresolved differences require changes-requested.',
+            'Compare the immutable natural scan above with the intended script and order. Keep the original scan unchanged. Return readingReview.firstReadingHash and readingReview.comparison as a non-empty string explaining agreements, skips and ambiguities, not an object or array; unresolved differences require changes-requested.',
         }
       : {}),
     unavailableBoundaryImages: request.optionalFiles.filter(
       (f) => request.entries[f] === null,
     ),
-    instructions:
-      'A real subagent must read source/script and inspect applicable images. First inspect unnumbered images without flow overlays; record the order a reader would naturally predict, considering proximity clusters, whole conversation rows, faces and gestures. Then compare with intended order. Inspect scene/time/place/flashback and action/object transitions, including adjacent pages. Required transitions include incoming and outgoing boundary context. Every required pair must be recorded exactly once; zero pairs use []. Some adjacent actual images may not exist yet: inspect the provided plan, explicitly record that limitation, and never certify an unavailable image. Creating those images later stales this review. Do not pass unresolved skips or abrupt unexplained changes. Return request, reviewer:{role:subagent,task:actual task name}, status:pass or changes-requested, observations:[specific observations], issues:[{problem,location,resolved:false}]. For storyboard/lettering/final pass include readingReview:{withoutGuides:true,predictedOrder:[{panel:panelId,dialogue:[1,2,...]}] for EVERY target panel, observations:[specific natural-scan and proximity evidence], transitions:[{from:panelId,to:panelId,observation:actual continuity evidence}]}. Empty dialogue panels use []. This records actual inspection, not a blinded experiment or an automatic readability guarantee. Do not claim inspection from command success.',
+    instructions: ['source', 'script'].includes(stage)
+      ? (stage === 'source'
+          ? 'Review the full original, its interpretation and any recorded adaptation plans supplied in this packet. Check source facts, chronology, emotional causality and distinctions between source settings and adaptation additions. '
+          : 'Compare the full original with the supplied script text, including dialogue dependencies, speaker identity, causal and emotional continuity, scene transitions and production consistency. ' +
+            request.base.dialogueInstructions +
+            ' ') +
+        'This is a text-stage review. Future storyboard, artwork and lettering images are not required here; their absence alone is a limitation, not a reason for changes-requested. Explicitly record that visual execution remains unverified and do not certify artwork, visual reading order or image-dependent quality. Unresolved issues in the supplied source or script require changes-requested. Return request, reviewer:{role:subagent,task:actual task name}, status:pass or changes-requested, observations:[specific observations], issues:[{problem,location,resolved:false}].'
+      : 'A real subagent must read source/script and inspect applicable images. First inspect unnumbered images without flow overlays; record the order a reader would naturally predict, considering proximity clusters, whole conversation rows, faces and gestures. Then compare with intended order. Inspect scene/time/place/flashback and action/object transitions, including adjacent pages. Required transitions include incoming and outgoing boundary context. Every required pair must be recorded exactly once; zero pairs use []. Some adjacent actual images may not exist yet: inspect the provided plan, explicitly record that limitation, and never certify an unavailable image. Creating those images later stales this review. Do not pass unresolved skips or abrupt unexplained changes. Return request, reviewer:{role:subagent,task:actual task name}, status:pass or changes-requested, observations:[specific observations], issues:[{problem,location,resolved:false}]. For storyboard/lettering/final pass include readingReview:{withoutGuides:true,predictedOrder:[{panel:panelId,dialogue:[1,2,...]}] for EVERY target panel, observations:[specific natural-scan and proximity evidence], transitions:[{from:panelId,to:panelId,observation:actual continuity evidence}]}. Empty dialogue panels use []. This records actual inspection, not a blinded experiment or an automatic readability guarantee. Do not claim inspection from command success.' +
+        readingScope,
   });
 } else if (mode === 'record') {
   assert.ok(input, 'Use record STAGE TARGET RESPONSE.json');

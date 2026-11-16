@@ -45,7 +45,7 @@ function work(relative) {
         .update(fs.readFileSync(inside(relative)))
         .digest('hex'),
   );
-  const audit = inspectProduction(config);
+  const audit = inspectProduction(config, { root });
   const sampleBytes = saved.reduce(
     (sum, p) => sum + fs.statSync(inside(`${asset}/panels/${p.id}.png`)).size,
     0,
@@ -79,8 +79,13 @@ function work(relative) {
     estimatedRemainingPanelBytes: saved.length
       ? Math.ceil((sampleBytes / saved.length) * (panels.length - saved.length))
       : null,
-    preflightWarnings: audit.warnings,
-    preflight: audit.panels.filter((p) => p.issues.length),
+    preflightWarnings:
+      audit.warnings + audit.pages.filter((p) => p.issues.length).length,
+    compositionWarnings: audit.compositionWarnings,
+    pageComposition: audit.pages,
+    preflight: audit.panels.filter(
+      (p) => p.issues.length || p.compositionIssues.length,
+    ),
     note: 'Saved materials and recorded reviews are presence counts, not current visual or hash verification. Config matching is not full package verification. The size estimate covers panel PNGs only.',
   };
 }

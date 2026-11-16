@@ -10,6 +10,7 @@ import {
   captureReview,
   reviewInputs,
   reviewMaterial,
+  validateReadingReview,
 } from '../src/stage-reviews.mjs';
 import { decisionContext, reviewContext } from '../src/review-context.mjs';
 import {
@@ -20,6 +21,7 @@ import {
 } from '../src/review-progress.mjs';
 import { firstReadingRequest } from '../src/first-reading.mjs';
 import { createGenerationJobs } from '../src/generation-jobs.mjs';
+import { refreshStoryboardInputs } from '../src/review-render.mjs';
 import {
   reviewPacket,
   packetPrompt,
@@ -126,6 +128,40 @@ try {
       'synthetic PNG placeholder',
     );
     write(`${c.workflowDir}/reading-flow/page-${page.id}.json`, []);
+  }
+  // Synthetic renderer transport, not manga/visual approval. Reused page IDs
+  // must never leave the previous neighbor's raster in an independent review.
+  for (const mode of ['economy', 'quality']) {
+    const selected = structuredClone(c);
+    selected.productionMode = mode;
+    selected.pages[2].panels[0].reviewDependencies = ['6-1'];
+    const calls = [];
+    const refresh = () =>
+      refreshStoryboardInputs(selected, configFile, '03', (file, args) => {
+        calls.push([file, args]);
+        if (file === 'cli/export.mjs')
+          write(`${args[0]}/page-${args[1]}.png`, 'fresh synthetic ' + args[1]);
+      });
+    write(`${c.workflowDir}/storyboards-unnumbered/page-04.png`, 'old page ID');
+    const updated = refresh();
+    assert.deepEqual(calls[0], ['cli/workflow.mjs', ['plan']]);
+    assert.ok(
+      updated.includes('03') &&
+        updated.includes('02') &&
+        updated.includes('04'),
+    );
+    if (mode === 'economy') assert.ok(updated.includes('06'));
+    assert.equal(
+      fs.readFileSync(
+        path.join(folder, c.workflowDir, 'storyboards-unnumbered/page-04.png'),
+        'utf8',
+      ),
+      'fresh synthetic 04',
+    );
+    // A second run must refresh even when all images already exist.
+    const count = calls.length;
+    refresh();
+    assert.equal(calls.length, count * 2);
   }
   const material = reviewMaterial(folder, c, configFile, 'artwork', '3-1');
   const jobs = createGenerationJobs({
@@ -292,6 +328,104 @@ try {
   const short = JSON.parse(cli('prepare', 'artwork', '3-1'));
   assert.ok(short.details && !short.inputs);
   const full = JSON.parse(cli('prepare', 'artwork', '3-1', '--verbose'));
+  for (const stage of [
+    'source',
+    'script',
+    'storyboard',
+    'artwork',
+    'lettering',
+    'final',
+  ]) {
+    const prepared = JSON.parse(cli('prepare', stage, 'all', '--verbose'));
+    const packet = reviewPacket(folder, prepared);
+    const prompt = packetPrompt(packet);
+    assert.match(prompt, /anatomical LEFT projects to image RIGHT/);
+    // The atlas dorsal figure points DOWN; rotate it before comparing screen sides.
+    assert.match(prompt, /a RIGHT hand has its thumb on image RIGHT/);
+    assert.match(
+      prompt,
+      /same RIGHT hand seen dorsally with fingers pointing UP, its thumb is on image LEFT/,
+    );
+    if (['storyboard', 'lettering', 'final'].includes(stage)) {
+      const ids = packet.context.script.pages
+        .flatMap((page) => page.panels.map((p) => p.id))
+        .sort();
+      assert.ok(
+        prepared.instructions.includes(
+          'unordered ID set: ' + JSON.stringify(ids),
+        ),
+      );
+      assert.match(
+        prompt,
+        /Do not add boundary or dependency panels to predictedOrder/,
+      );
+      assert.match(
+        prompt,
+        /readingReview\.transitions for exactly the supplied requiredTransitions pairs/,
+      );
+    } else assert.doesNotMatch(prepared.instructions, /unordered ID set/);
+    if (['source', 'script'].includes(stage)) {
+      assert.equal(packet.assets.filter((a) => a.image).length, 0);
+      assert.match(prepared.instructions, /This is a text-stage review/);
+      assert.match(
+        prompt,
+        /Missing future images alone.*not changes-requested/,
+      );
+      assert.match(prompt, /Unresolved text issues.*require changes-requested/);
+      assert.match(prompt, /do not certify artwork/);
+      assert.doesNotMatch(
+        prompt,
+        /First inspect unnumbered images|Inspect supplied images directly/,
+      );
+      if (stage === 'script') {
+        assert.match(prompt, /describe the unlettered base illustration/);
+        assert.match(prompt, /approved dialogue array is composed separately/);
+        assert.match(prompt, /Still flag omitted responses, speaker errors/);
+        assert.match(prompt, /important emotional setup\/payoff/);
+        assert.match(prompt, /both sides of an exchange are cut/);
+        assert.match(
+          prompt,
+          /production-state note alone is not reader-visible/,
+        );
+        assert.match(
+          prepared.instructions,
+          /dialogueReview:\{sourceCompared:true,panels:/,
+        );
+        assert.match(prepared.instructions, /including silent panels/);
+        assert.match(prepared.instructions, /production consistency/);
+      } else
+        assert.match(
+          prepared.instructions,
+          /interpretation and any recorded adaptation plans/,
+        );
+    } else {
+      assert.match(
+        prepared.instructions,
+        /First inspect unnumbered images without flow overlays/,
+      );
+      assert.match(prompt, /Inspect supplied images directly/);
+      assert.match(
+        prompt,
+        /If evidence is insufficient return changes-requested/,
+      );
+      assert.doesNotMatch(prompt, /Missing future images alone/);
+    }
+  }
+  write(configFile, blind);
+  const firstPrepared = JSON.parse(
+    cli('prepare-reading', 'storyboard', '01', '--verbose'),
+  );
+  const firstPrompt = packetPrompt(reviewPacket(folder, firstPrepared));
+  assert.match(firstPrompt, /anatomical LEFT projects to image RIGHT/);
+  assert.doesNotMatch(firstPrompt, /unlettered base illustration/);
+  assert.match(firstPrompt, /first inspects ONLY these unnumbered images/);
+  assert.match(
+    firstPrompt,
+    /Do not read the source, script, configuration or flow guides yet/,
+  );
+  assert.match(firstPrompt, /Inspect supplied images directly/);
+  assert.doesNotMatch(firstPrompt, /unordered ID set/);
+  write(configFile, c);
   assert.equal(read(short.details).request, full.request);
   assert.ok(JSON.stringify(short).length < JSON.stringify(full).length);
   cli('reopen', 'Fix the acting');
@@ -404,6 +538,76 @@ console.log(JSON.stringify({type:'turn.completed',usage:{input_tokens:123,output
   const verboseGeneration = JSON.parse(generation('--verbose'));
   assert.equal(read(shortGeneration.details).prompt, verboseGeneration.prompt);
   assert.equal(read(shortGeneration.request).prompt, verboseGeneration.prompt);
+  cli('mode', 'economy');
+  const imageOnly = JSON.parse(
+    cli('prepare-reading', 'storyboard', '01', '--verbose'),
+  );
+  const imageOnlyPacket = reviewPacket(folder, imageOnly);
+  assert.ok(imageOnlyPacket.assets.every((asset) => asset.image));
+  assert.ok(!packetPrompt(imageOnlyPacket).includes(source));
+  const firstResponse = 'works/fixture/first-response.json';
+  write(firstResponse, {
+    request: imageOnly.request,
+    reviewer: { role: 'subagent', task: 'synthetic-image-only-fixture' },
+    pages: [
+      {
+        page: '01',
+        scan: 'Synthetic scan.',
+        observation: 'Not an AI inspection.',
+      },
+    ],
+  });
+  cli('record-reading', 'storyboard', '01', firstResponse);
+  const comparison = JSON.parse(
+    cli('prepare', 'storyboard', '01', '--verbose'),
+  );
+  assert.ok(comparison.comparisonInstructions);
+  const scope = read(comparison.request).base;
+  const targetPanels = scope.script.pages.flatMap((page) => page.panels);
+  const targetIds = targetPanels.map((p) => p.id).sort();
+  const boundaryIds = scope.boundaryContext.flatMap((page) =>
+    page.panels.map((p) => p.id),
+  );
+  assert.ok(boundaryIds.length, 'Scope regression needs a neighboring panel');
+  assert.ok(
+    comparison.instructions.includes(
+      'unordered ID set: ' + JSON.stringify(targetIds),
+    ),
+  );
+  assert.ok(boundaryIds.every((id) => !targetIds.includes(id)));
+  const scopedRecord = {
+    status: 'pass',
+    readingReview: {
+      withoutGuides: true,
+      observations: [
+        'Synthetic target observation.',
+        'Synthetic boundary observation.',
+      ],
+      predictedOrder: targetPanels.map((p) => ({
+        panel: p.id,
+        dialogue: p.dialogue.map((_, i) => i + 1),
+      })),
+      transitions: scope.requiredTransitions.map((pair) => ({
+        ...pair,
+        observation: 'Synthetic continuity evidence.',
+      })),
+    },
+  };
+  validateReadingReview(blind, 'storyboard', '01', scopedRecord);
+  const withNeighbor = structuredClone(scopedRecord);
+  withNeighbor.readingReview.predictedOrder.push({
+    panel: boundaryIds[0],
+    dialogue: [],
+  });
+  assert.throws(
+    () => validateReadingReview(blind, 'storyboard', '01', withNeighbor),
+    /Record predicted reading order for every target panel/,
+  );
+  assert.ok(
+    packetPrompt(reviewPacket(folder, comparison)).includes(
+      comparison.comparisonInstructions,
+    ),
+  );
   console.log(
     'PASS: scoped source fallback, distant dependencies, delta review queue, design seal/reopen, decisions, compact logs, image-only isolation and fresh-process adapter (synthetic fixtures)',
   );

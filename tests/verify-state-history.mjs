@@ -223,6 +223,57 @@ try {
     /Damaged history object/,
   );
   assert.ok(!fs.existsSync(rejected));
+  for (const [kind, initial, captured, current] of [
+    ['growing', 'a', 'appended log bytes', 'appended log bytes and more'],
+    ['truncated', 'long initial log', 'short', 'new'],
+  ]) {
+    const liveWork = path.join(root, 'works', kind);
+    fs.mkdirSync(liveWork);
+    const liveFile = path.join(liveWork, 'live.log');
+    fs.writeFileSync(liveFile, initial);
+    const realRead = fs.readFileSync;
+    let reads = 0;
+    // @ts-expect-error Deliberately replace the overloaded API for a deterministic capture race.
+    fs.readFileSync = (file, options) => {
+      if (file !== liveFile) return realRead(file, options);
+      reads++;
+      fs.writeFileSync(liveFile, captured);
+      const bytes = realRead(file, options);
+      fs.writeFileSync(liveFile, current);
+      return bytes;
+    };
+    let saved;
+    try {
+      saved = checkpoint(root, liveWork, 'file changes during capture');
+    } finally {
+      fs.readFileSync = realRead;
+    }
+    assert.equal(reads, 1);
+    const liveHistory = path.join(root, '.manga-history', 'states', kind);
+    const manifest = readState(path.join(liveHistory, saved.id + '.json.gz'));
+    const name = `works/${kind}/live.log`;
+    assert.equal(manifest.entries[name].size, Buffer.byteLength(captured));
+    const cache = JSON.parse(
+      realRead(path.join(liveHistory, 'cache.json'), 'utf8'),
+    );
+    assert.ok(
+      !Object.hasOwn(cache, name),
+      'Changing files must not cache a stale stamp',
+    );
+    const destination = path.join(root, kind + '-restored');
+    extractState(root, liveWork, saved.id, destination);
+    assert.equal(realRead(path.join(destination, name), 'utf8'), captured);
+    const settled = checkpoint(root, liveWork, 'settled log');
+    assert.notEqual(settled.id, saved.id);
+    const settledManifest = readState(
+      path.join(liveHistory, settled.id + '.json.gz'),
+    );
+    assert.equal(
+      settledManifest.entries[name].size,
+      Buffer.byteLength(current),
+    );
+    assert.equal(checkpoint(root, liveWork, 'unchanged log').id, settled.id);
+  }
   const panel = {
     id: '01-1',
     rect: [24, 24, 976, 650],

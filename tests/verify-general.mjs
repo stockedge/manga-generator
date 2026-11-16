@@ -4,12 +4,14 @@ import fs from 'node:fs';
 import { defaultQuality, categories } from '../src/quality.mjs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { deflateSync } from 'node:zlib';
 import { compactSVG } from '../src/compact-svg.mjs';
 import { renderStoryboardSketch } from '../src/storyboard-sketch.mjs';
-import { reviewInputs } from '../src/stage-reviews.mjs';
+import { reviewInputs, captureReview } from '../src/stage-reviews.mjs';
 import { root as workspaceRoot } from '../src/workspace.mjs';
+import { createGenerationJobs } from '../src/generation-jobs.mjs';
+import { cropRectangle, renderArtworkImage } from '../src/artwork-crop.mjs';
 const temporary = createTemporary('test');
 const root = temporary.folder;
 copyRuntime(workspaceRoot, root);
@@ -32,7 +34,7 @@ const run = (...args) =>
     windowsHide: true,
   });
 // A valid, blank PNG fixture keeps these checks independent of any work's artwork.
-function blankPNG() {
+function blankPNG(width = 1024, height = 1536) {
   const chunk = (type, data) => {
     const body = Buffer.concat([Buffer.from(type), data]);
     let crc = 0xffffffff;
@@ -48,12 +50,12 @@ function blankPNG() {
     return Buffer.concat([size, body, sum]);
   };
   const header = Buffer.alloc(13);
-  header.writeUInt32BE(1024);
-  header.writeUInt32BE(1536, 4);
+  header.writeUInt32BE(width);
+  header.writeUInt32BE(height, 4);
   header[8] = 8;
   header[9] = 2;
-  const rows = Buffer.alloc((1024 * 3 + 1) * 1536, 255);
-  for (let y = 0; y < 1536; y++) rows[y * (1024 * 3 + 1)] = 0;
+  const rows = Buffer.alloc((width * 3 + 1) * height, 255);
+  for (let y = 0; y < height; y++) rows[y * (width * 3 + 1)] = 0;
   return Buffer.concat([
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     chunk('IHDR', header),
@@ -208,6 +210,47 @@ try {
     fs.writeFileSync(folder + '/workflow.json', JSON.stringify(v));
   save(c);
   run('check');
+  const panelCountFixture = (count) => {
+    const value = structuredClone(c);
+    value.pages[0].panels = Array.from({ length: count }, (_, i) => ({
+      id: `count-${i + 1}`,
+      order: i + 1,
+      role: '反応',
+      beat: 'Synthetic silent beat',
+      scene: 'Synthetic silent panel',
+      rect: [i % 2 ? 24 : 520, 24 + Math.floor(i / 2) * 352, 480, 336],
+      speakers: {},
+      dialogue: [],
+    }));
+    return value;
+  };
+  for (const count of [7, 8]) {
+    const value = panelCountFixture(count);
+    save(value);
+    run('check');
+    run('plan');
+    const flow = JSON.parse(
+      fs.readFileSync(folder + '/workflow/reading-flow/page-01.json', 'utf8'),
+    );
+    assert.deepEqual(
+      flow.panels.map((panel) => panel.id),
+      value.pages[0].panels.map((panel) => panel.id),
+      'Seven/eight-panel pages must retain every panel in reading order',
+    );
+  }
+  for (const count of [0, 1, 9]) {
+    save(panelCountFixture(count));
+    assert.throws(() => run('check'), /Each page must have 2 to 8 panels/);
+  }
+  const overlapping = panelCountFixture(7);
+  overlapping.pages[0].panels[1].rect = overlapping.pages[0].panels[0].rect;
+  save(overlapping);
+  assert.throws(() => run('check'), /Panels overlap/);
+  const outside = panelCountFixture(8);
+  outside.pages[0].panels[7].rect[0] = 1000;
+  save(outside);
+  assert.throws(() => run('check'), /Panel outside safe area/);
+  save(c);
   run('plan');
   assert.match(run('status'), /pending/);
   assert.throws(() => run('build'));
@@ -569,6 +612,46 @@ try {
   }, /Invalid protected area/);
   // Trailing fixture bytes change provenance without changing the blank PNG pixels.
   const image = blankPNG();
+  const cropPanel = { rect: [24, 40, 800, 200] };
+  const uncropped = renderArtworkImage(image, cropPanel);
+  assert.equal(
+    uncropped,
+    `<image href="data:image/png;base64,${image.toString('base64')}" x="24" y="40" width="800" height="200" preserveAspectRatio="xMidYMid meet"/>`,
+    'No crop must preserve the old SVG byte-for-byte',
+  );
+  assert.deepEqual(
+    cropRectangle([0, 0, 1024, 1536], image.subarray(0, 24)),
+    [0, 0, 1024, 1536],
+  );
+  const croppedImage = renderArtworkImage(image, {
+    ...cropPanel,
+    artworkCrop: [100, 200, 800, 400],
+  });
+  assert.match(
+    croppedImage,
+    /viewBox="100 200 800 400" preserveAspectRatio="xMidYMid meet" overflow="hidden"/,
+  );
+  assert.match(croppedImage, /width="1024" height="1536"/);
+  assert.match(
+    croppedImage,
+    /<svg x="100" y="200" width="800" height="400" viewBox="100 200 800 400" overflow="hidden">/,
+  );
+  assert.doesNotMatch(croppedImage, /preserveAspectRatio="none"|slice/);
+  for (const crop of [
+    null,
+    [0, 0, 2],
+    [NaN, 0, 2, 3],
+    [0, 0, Infinity, 3],
+    [-1, 0, 2, 3],
+    [0, 0, 0, 3],
+    [1000, 0, 25, 3],
+    [0, 1536, 1, 1],
+  ])
+    assert.throws(() => cropRectangle(crop, image), /artworkCrop/);
+  assert.throws(
+    () => cropRectangle([0, 0, 1, 1], Buffer.alloc(24)),
+    /PNG header/,
+  );
   fs.writeFileSync(folder + '/a.png', image);
   fs.writeFileSync(
     folder + '/b.png',
@@ -767,6 +850,57 @@ try {
     sketchedRough.includes('fill="#f5f5f5" stroke="#bbb"'),
     'Other panels retain gray face fill',
   );
+  const cleanRough = fs.readFileSync(
+      folder + '/workflow/storyboards-unnumbered/page-01.svg',
+      'utf8',
+    ),
+    flowRough = fs.readFileSync(
+      folder + '/workflow/reading-flow/page-01.svg',
+      'utf8',
+    );
+  assert.ok(
+    cleanRough.includes(
+      renderStoryboardSketch(
+        roughSketchFixture,
+        c.pages[0].panels[0].rect,
+        'rough-sketch-0',
+        { rough: true },
+      ),
+    ),
+    'Clean first-reading view must retain the structured drawing verbatim',
+  );
+  assert.doesNotMatch(
+    cleanRough,
+    /stroke="#bbb"|fill="#999"|fill="#666"|#005eb8|#d04a00/,
+  );
+  for (const p of c.pages[0].panels) {
+    const [x, y, w, h] = p.rect;
+    assert.ok(
+      cleanRough.includes(
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="black" stroke-width="3"/>`,
+      ),
+    );
+    for (const [id, s] of Object.entries(p.speakers || {})) {
+      if (s.kind === 'offscreen') continue;
+      const label = `<text x="${s.anchor[0] + 10}" y="${s.anchor[1]}" font-size="18">${id}</text>`;
+      assert.ok(
+        !cleanRough.includes(label),
+        'Clean view must omit actor labels',
+      );
+      assert.ok(
+        sketchedRough.includes(label),
+        'Numbered storyboard retains actor guides',
+      );
+      assert.ok(
+        flowRough.includes(label),
+        'Reading-flow view retains actor guides',
+      );
+    }
+  }
+  assert.match(flowRough, /#005eb8/);
+  assert.match(sketchedRough, /fill="#999"/);
+  assert.match(cleanRough, /<polygon|<path/);
+  assert.match(cleanRough, /<text/);
   assert.throws(
     () => run('accept-panel', '01-1', candidate, '--reviewed'),
     /Stale candidate/,
@@ -791,6 +925,219 @@ try {
   );
 
   assert.ok(fs.existsSync(folder + '/assets/candidates/01-1/index.html'));
+  const draftPanel = c.pages[0].panels[0],
+    draftPath = relative + '/draft-v1.png';
+  fs.writeFileSync(path.join(root, draftPath), blankPNG());
+  draftPanel.storyboardImage = draftPath;
+  save(c);
+  assert.throws(() => run('check'), /panel.references/);
+  draftPanel.references = [draftPath];
+  draftPanel.storyboardSketch = structuredClone(roughSketchFixture);
+  save(c);
+  run('plan');
+  const draftedJob = jobs()[0].fingerprint,
+    draftedReview = captureReview(
+      root,
+      c,
+      file,
+      'storyboard',
+      '01',
+    ).fingerprint;
+  for (const view of [
+    'storyboards',
+    'storyboards-unnumbered',
+    'reading-flow',
+  ]) {
+    const drawing = fs.readFileSync(
+      folder + `/workflow/${view}/page-01.svg`,
+      'utf8',
+    );
+    assert.ok(drawing.includes(embedded));
+    assert.match(drawing, /preserveAspectRatio="xMidYMid meet"/);
+    assert.ok(
+      !drawing.includes('rough-sketch-0'),
+      'PNG visually replaces editable vector fallback',
+    );
+    assert.match(drawing, /<text/);
+    if (view === 'storyboards-unnumbered')
+      assert.doesNotMatch(drawing, /stroke="#bbb"|fill="#999"|fill="#666"/);
+    else assert.match(drawing, /fill="none" stroke="#bbb"/);
+  }
+  assert.ok(jobs()[0].references.includes(draftPath));
+  const fullDraftSVG = fs.readFileSync(
+    folder + '/workflow/storyboards/page-01.svg',
+  );
+  const preparationJob = JSON.parse(
+    fs.readFileSync(folder + '/workflow/panel-jobs.json', 'utf8'),
+  ).find((j) => j.id === '01-1');
+  for (const ref of preparationJob.references) {
+    const target = path.join(root, ref);
+    if (!fs.existsSync(target)) {
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, image);
+    }
+  }
+  const preparedComposition = spawnSync(
+    process.execPath,
+    ['cli/generation.mjs', 'prepare', '01-1'],
+    {
+      cwd: root,
+      env: { ...process.env, MANGA_PROJECT: file },
+      encoding: 'utf8',
+      windowsHide: true,
+    },
+  );
+  assert.equal(preparedComposition.status, 0, preparedComposition.stderr);
+  assert.match(
+    preparedComposition.stderr,
+    /Composition review needed: 01-1:.*未使用面積/,
+  );
+  assert.ok(JSON.parse(preparedComposition.stdout).request);
+  draftPanel.artworkCrop = [0, 200, 1024, 800];
+  save(c);
+  assert.notEqual(
+    captureReview(root, c, file, 'storyboard', '01').fingerprint,
+    draftedReview,
+    'Crop must invalidate the review before replan',
+  );
+  run('plan');
+  assert.notEqual(jobs()[0].fingerprint, draftedJob);
+  assert.match(
+    fs.readFileSync(folder + '/workflow/storyboards/page-01.svg', 'utf8'),
+    /viewBox="0 200 1024 800"/,
+  );
+  draftPanel.artworkCrop = [0, 1000, 1024, 800];
+  save(c);
+  assert.throws(() => run('check'), /exceeds the source PNG/);
+  delete draftPanel.artworkCrop;
+  save(c);
+  run('plan');
+  assert.equal(jobs()[0].fingerprint, draftedJob);
+  assert.deepEqual(
+    fs.readFileSync(folder + '/workflow/storyboards/page-01.svg'),
+    fullDraftSVG,
+  );
+  const otherDraft = relative + '/draft-v2.png';
+  fs.writeFileSync(path.join(root, otherDraft), blankPNG());
+  for (const modern of [false, true]) {
+    const selection = structuredClone(c);
+    if (modern) selection.promptPolicy = { version: 2 };
+    const selectedPanel = selection.pages[0].panels[0];
+    selectedPanel.references = [draftPath, otherDraft];
+    const make = createGenerationJobs({
+      config: selection,
+      local: (f) => path.join(root, f),
+      stateFor: () => ({}),
+      svg: () => '',
+    });
+    const first = make.panelJob(selection.pages[0], selectedPanel).fingerprint;
+    const firstPage = make.job(selection.pages[0]).fingerprint;
+    const firstSfxReview = captureReview(
+      root,
+      selection,
+      file,
+      'storyboard',
+      selection.pages[0].id,
+    ).fingerprint;
+    selectedPanel.soundEffects = [
+      { text: 'ガンッ', x: 40, y: 300, fontSize: 60 },
+    ];
+    let lastEffectHash = first;
+    for (const change of [{}, { text: 'ドン' }, { x: 60 }, { fontSize: 80 }]) {
+      Object.assign(selectedPanel.soundEffects[0], change);
+      const currentEffectHash = make.panelJob(
+        selection.pages[0],
+        selectedPanel,
+      ).fingerprint;
+      assert.notEqual(
+        currentEffectHash,
+        lastEffectHash,
+        'SFX content/position/size must invalidate material',
+      );
+      assert.notEqual(make.job(selection.pages[0]).fingerprint, firstPage);
+      assert.notEqual(
+        captureReview(
+          root,
+          selection,
+          file,
+          'storyboard',
+          selection.pages[0].id,
+        ).fingerprint,
+        firstSfxReview,
+      );
+      lastEffectHash = currentEffectHash;
+    }
+    delete selectedPanel.soundEffects;
+    assert.equal(
+      make.panelJob(selection.pages[0], selectedPanel).fingerprint,
+      first,
+    );
+    assert.equal(make.job(selection.pages[0]).fingerprint, firstPage);
+    selectedPanel.artworkCrop = [0, 200, 1024, 800];
+    const cropped = make.panelJob(selection.pages[0], selectedPanel);
+    assert.notEqual(
+      cropped.fingerprint,
+      first,
+      'Crop must invalidate legacy and modern material jobs',
+    );
+    assert.notEqual(
+      make.job(selection.pages[0]).fingerprint,
+      firstPage,
+      'Crop must invalidate page material jobs even without a rendered layout',
+    );
+    assert.match(cropped.prompt, /compositor metadata.*NEW artwork/s);
+    delete selectedPanel.artworkCrop;
+    assert.equal(
+      make.panelJob(selection.pages[0], selectedPanel).fingerprint,
+      first,
+    );
+    selectedPanel.storyboardImage = otherDraft;
+    assert.notEqual(
+      make.panelJob(selection.pages[0], selectedPanel).fingerprint,
+      first,
+      'Draft selector alone must invalidate both legacy and modern panel jobs',
+    );
+  }
+  fs.appendFileSync(path.join(root, draftPath), 'changed-draft');
+  assert.notEqual(
+    captureReview(root, c, file, 'storyboard', '01').fingerprint,
+    draftedReview,
+    'Raw draft mutation must invalidate review before replan',
+  );
+  run('plan');
+  assert.notEqual(jobs()[0].fingerprint, draftedJob);
+  assert.notEqual(
+    captureReview(root, c, file, 'storyboard', '01').fingerprint,
+    draftedReview,
+  );
+  assert.equal(jobs()[1].fingerprint, planned[1].fingerprint);
+  for (const bad of [
+    '../outside.png',
+    'https://example.invalid/draft.png',
+    relative + '/original.txt',
+  ]) {
+    draftPanel.storyboardImage = bad;
+    draftPanel.references = [bad];
+    save(c);
+    assert.throws(
+      () => run('check'),
+      /escapes|local project-relative PNG|Expected a PNG/,
+    );
+  }
+  const zeroPNG = blankPNG();
+  zeroPNG.writeUInt32BE(0, 16);
+  fs.writeFileSync(path.join(root, draftPath), zeroPNG);
+  draftPanel.storyboardImage = draftPath;
+  draftPanel.references = [draftPath];
+  save(c);
+  assert.throws(() => run('check'), /positive dimensions/);
+  fs.writeFileSync(path.join(root, draftPath), blankPNG());
+  delete draftPanel.storyboardImage;
+  delete draftPanel.references;
+  delete draftPanel.storyboardSketch;
+  save(c);
+  run('plan');
+  assert.equal(jobs()[0].fingerprint, planned[0].fingerprint);
   run(
     'accept-panel',
     '01-1',
@@ -830,6 +1177,91 @@ try {
   assert.ok(!letters.includes('data:image/png'));
   assert.ok(letters.includes('<text'));
   const complete = fs.readFileSync(folder + '/output/page-01.svg');
+  for (const args of [
+    ['check'],
+    ['accept-panel', '01-1', relative + '/a.png', '--reviewed'],
+  ]) {
+    const result = spawnSync(process.execPath, ['cli/workflow.mjs', ...args], {
+      cwd: root,
+      env: { ...process.env, MANGA_PROJECT: file },
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /構図の要確認.*目視合格/s);
+    assert.match(result.stderr, /未使用面積/);
+    assert.match(result.stdout, /OK:|Accepted panel/);
+  }
+  draftPanel.artworkCrop = [0, 200, 1024, 800];
+  save(c);
+  run('plan');
+  assert.throws(
+    () => run('preview'),
+    /Changed or missing preview material|Stale panel override/,
+  );
+  fs.writeFileSync(folder + '/smaller-crop-source.png', blankPNG(256, 384));
+  const previousCropRecord = fs.readFileSync(
+    folder + '/assets/panels/01-1.json',
+  );
+  assert.throws(
+    () =>
+      run(
+        'accept-panel',
+        '01-1',
+        relative + '/smaller-crop-source.png',
+        '--reviewed',
+      ),
+    /exceeds the source PNG/,
+  );
+  assert.deepEqual(
+    fs.readFileSync(folder + '/assets/panels/01-1.json'),
+    previousCropRecord,
+    'Invalid crop adoption must preserve the accepted record',
+  );
+  assert.deepEqual(
+    fs.readFileSync(folder + '/assets/panels/01-1.png'),
+    image,
+    'Invalid crop adoption must preserve the accepted image',
+  );
+  run('accept-panel', '01-1', relative + '/a.png', '--reviewed');
+  run('preview');
+  assert.match(
+    fs.readFileSync(folder + '/workflow/review/page-01.svg', 'utf8'),
+    /viewBox="0 200 1024 800"/,
+  );
+  draftPanel.artworkCrop = [0, 1000, 1024, 800];
+  save(c);
+  assert.throws(() => run('check'), /exceeds the source PNG/);
+  delete draftPanel.artworkCrop;
+  save(c);
+  run('plan');
+  run('accept-panel', '01-1', relative + '/a.png', '--reviewed');
+  run('preview');
+  run('review', '01', '--speakers', '--faces', '--order', '--continuity');
+  run('build');
+  assert.deepEqual(fs.readFileSync(folder + '/output/page-01.svg'), complete);
+  draftPanel.storyboardImage = draftPath;
+  draftPanel.references = [draftPath];
+  save(c);
+  run('plan');
+  assert.match(run('status'), /stale/);
+  assert.throws(() => run('build'));
+  run('accept-panel', '01-1', relative + '/a.png', '--reviewed');
+  run('preview');
+  run('review', '01', '--speakers', '--faces', '--order', '--continuity');
+  run('build');
+  run('layers');
+  assert.deepEqual(fs.readFileSync(folder + '/output/page-01.svg'), complete);
+  assert.equal(
+    fs.readFileSync(folder + '/output/layers/page-01-artwork.svg', 'utf8'),
+    art,
+  );
+  assert.equal(
+    fs.readFileSync(folder + '/output/layers/page-01-lettering.svg', 'utf8'),
+    letters,
+  );
+  delete draftPanel.storyboardImage;
+  delete draftPanel.references;
   c.pages[0].panels[0].storyboardSketch = structuredClone(roughSketchFixture);
   save(c);
   run('plan');
@@ -1051,9 +1483,72 @@ try {
   assert.match(run('status'), /stale/);
   assert.throws(() => run('build'));
   const history = fs.readFileSync(folder + '/assets/history.jsonl', 'utf8');
+  const offscreenFixture = structuredClone(c);
+  const offscreenPanel = offscreenFixture.pages[0].panels[0];
+  offscreenPanel.speakers = {
+    a: { kind: 'offscreen', offscreenEdge: 'right' },
+  };
+  offscreenPanel.dialogue = [
+    {
+      speaker: 'a',
+      text: 'はい',
+      side: 'right',
+      x: offscreenPanel.rect[2] - 82,
+      dy: 12,
+    },
+  ];
+  offscreenPanel.protected = [];
+  save(offscreenFixture);
+  run('check');
+  offscreenPanel.speakers.a.offscreenEdge = 'top';
+  save(offscreenFixture);
+  assert.throws(() => run('check'), /offscreenEdge/);
+  offscreenPanel.speakers.a.offscreenEdge = 'right';
+  offscreenPanel.dialogue[0].x = 12;
+  save(offscreenFixture);
+  assert.throws(() => run('check'), /near its declared panel edge/);
+  offscreenPanel.dialogue[0].x = offscreenPanel.rect[2] - 82;
+  offscreenPanel.protected = [
+    [
+      offscreenPanel.rect[0] + offscreenPanel.rect[2] - 14,
+      offscreenPanel.rect[1] + 54,
+      4,
+      12,
+    ],
+  ];
+  save(offscreenFixture);
+  assert.throws(() => run('check'), /Tail crosses protected area/);
+  save(c);
   assert.ok(history.includes('検証用に構図Aを選択'));
+  const sfxFixture = structuredClone(c),
+    sfxPanel = sfxFixture.pages[0].panels[0];
+  sfxPanel.soundEffects = [
+    {
+      text: 'ガンッ',
+      x: sfxPanel.rect[0] + 10,
+      y: sfxPanel.rect[1] + 10,
+      fontSize: 80,
+    },
+  ];
+  sfxPanel.speakers = {};
+  sfxPanel.dialogue = [];
+  sfxPanel.protected = [];
+  save(sfxFixture);
+  run('plan');
+  const sfxStoryboard = fs.readFileSync(
+    folder + '/workflow/storyboards/page-' + sfxFixture.pages[0].id + '.svg',
+    'utf8',
+  );
+  assert.ok(sfxStoryboard.includes('ガンッ'));
+  sfxPanel.soundEffects[0].x = -10;
+  save(sfxFixture);
+  assert.throws(() => run('check'), /Sound effect outside panel/);
+  save(c);
   assert.ok(
     fs.readdirSync(folder + '/assets/history').some((f) => f.endsWith('.png')),
+  );
+  console.log(
+    'PASS: planning PNG binding, contain rendering, clean guides, final/layer exclusion, raw review and generation invalidation',
   );
   console.log(
     'PASS: optional rough sketches, final exclusion, no-field bytes, sketch job/candidate invalidation, clipping and injection rejection',

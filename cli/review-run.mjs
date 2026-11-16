@@ -7,6 +7,7 @@ import { executeReview } from '../src/review-runner.mjs';
 import { pendingReviews } from '../src/review-progress.mjs';
 import { twoPhaseReading, loadFirstReading } from '../src/first-reading.mjs';
 import { emitResult } from '../src/cli-output.mjs';
+import { refreshStoryboardInputs } from '../src/review-render.mjs';
 const { root, config, configFile, local } = loadProject();
 const [stage, target = 'all'] = process.argv.slice(2);
 const run = (...args) =>
@@ -40,6 +41,15 @@ assert.ok(
 );
 const completed = [];
 for (const task of tasks) {
+  if (task.stage === 'storyboard')
+    refreshStoryboardInputs(config, configFile, task.target, (file, args) =>
+      execFileSync(process.execPath, [path.join(root, file), ...args], {
+        cwd: root,
+        env: { ...process.env, MANGA_PROJECT: configFile },
+        stdio: 'pipe',
+        windowsHide: true,
+      }),
+    );
   const dispatch = (first) => {
     const prepared = JSON.parse(
       run(
