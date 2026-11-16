@@ -156,6 +156,7 @@ try {
     'src/cli-output.mjs',
     'src/first-reading.mjs',
     'src/production-preflight.mjs',
+    'src/manga-statistics.mjs',
     'src/artwork-crop.mjs',
     'src/text-card.mjs',
     'src/generation-edits.mjs',
@@ -191,6 +192,12 @@ try {
     text,
   );
   assert.equal(JSON.parse(first.toString('utf8')).renderMode, 'panels');
+  const taskText = fs.readFileSync(
+    path.join(path.dirname(full), 'workflow', 'automatic-task.md'),
+    'utf8',
+  );
+  assert.match(taskText, /docs\/MANGA-STATISTICS.md/);
+  assert.match(taskText, /無言ノルマにしない/);
   assert.match(run(['start', original]), /Resume:/);
   assert.deepEqual(fs.readFileSync(full), first, 'Resume overwrote script');
   assert.throws(() => run(['start', original, '--title', 'different']));

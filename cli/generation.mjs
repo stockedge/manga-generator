@@ -57,6 +57,11 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
         'Page composition review needed: ' + reviewPage.id + ': ' + warning,
       );
   }
+  if (mode === 'prepare')
+    for (const warning of inspectProduction(c).statistics.warnings.filter((w) =>
+      w.panels.includes(id),
+    ))
+      console.error('Statistics review needed: ' + warning.message);
   const editing = mode === 'prepare-edit';
   let prompt = editing
     ? fs.readFileSync(local(process.argv[5]), 'utf8')

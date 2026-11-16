@@ -93,6 +93,9 @@ export function reviewInputs(c, configFile, stage, target = 'all') {
               action: panel.action,
               emotion: panel.emotion,
               camera: panel.camera,
+              ...(panel.cameraCrop === undefined
+                ? {}
+                : { cameraCrop: panel.cameraCrop }),
               production: panel.production,
               dialogue: panel.dialogue.map((d) => ({
                 speaker: d.speaker,

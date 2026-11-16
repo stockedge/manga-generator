@@ -1018,6 +1018,10 @@ try {
     /Composition review needed: 01-1:.*未使用面積/,
   );
   assert.ok(JSON.parse(preparedComposition.stdout).request);
+  draftPanel.cameraCrop = 'unrecognized';
+  save(c);
+  assert.throws(() => run('check'), /Unknown planned cameraCrop/);
+  delete draftPanel.cameraCrop;
   draftPanel.artworkCrop = [0, 200, 1024, 800];
   save(c);
   assert.notEqual(

@@ -85,6 +85,15 @@ function warnComposition(pageId, panelId) {
       .filter((p) => !pageId || p.page === pageId)
       .flatMap((p) => p.issues.map((issue) => `${p.page}: ${issue}`)),
   );
+  lines.push(
+    ...report.statistics.warnings
+      .filter(
+        (w) =>
+          (!pageId || w.pages.includes(pageId)) &&
+          (!panelId || w.panels.includes(panelId)),
+      )
+      .map((w) => `統計の参考警告 ${w.code}: ${w.message}`),
+  );
   if (lines.length)
     process.stderr.write(
       '構図の要確認（機械検査の成功は目視合格ではありません）:\n' +
@@ -163,6 +172,11 @@ function validate(data = config) {
         )
           cropRectangle(p.artworkCrop, imageFile(adopted));
       }
+      if (p.cameraCrop !== undefined)
+        assert.ok(
+          ['shoulder', 'bust', 'waist', 'knee', 'full'].includes(p.cameraCrop),
+          'Unknown planned cameraCrop: ' + p.id,
+        );
       if (p.storyboardSketch !== undefined)
         renderStoryboardSketch(p.storyboardSketch, p.rect, 'validate-sketch', {
           rough: true,

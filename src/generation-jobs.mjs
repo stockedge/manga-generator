@@ -24,9 +24,12 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
     return Object.keys(s).length ? '\nSECTION STATE: ' + JSON.stringify(s) : '';
   };
   const cropText = (p) =>
-    cropRectangle(p.artworkCrop)
+    (p.cameraCrop === undefined
+      ? ''
+      : '\nPLANNED CAMERA CROP for panel ' + p.id + ': ' + p.cameraCrop) +
+    (cropRectangle(p.artworkCrop)
       ? `\nEXISTING MATERIAL CROP: ${JSON.stringify(p.artworkCrop)} in the source PNG's native pixels. This is compositor metadata for reusing existing artwork. For NEW artwork, compose to the target panel aspect without copying surrounding white margins; re-measure or remove this crop before adopting a new image.`
-      : '';
+      : '');
   function promptBase(page, baked = false) {
     return `Use case: illustration-story. Produce ONE finished monochrome manga page, 1024x1536 portrait, Japanese RIGHT-TO-LEFT reading. Use the supplied canonical references. The storyboard is the exact layout: preserve ALL panel rectangle positions and sizes and white balloon footprints. Gray face rectangles and labeled mouth anchors are exact reserved character positions, not final artwork. Preserve them; balloon tails must point to those actors. Additional artwork references preserve identity; their old layouts do not override this plan.\nSTYLE: ${config.style}\nPAGE PURPOSE: ${page.purpose}.\n${page.panels.map((p) => `Panel ${p.order}, rectangle [x,y,width,height]=${JSON.stringify(p.rect)}: ${p.scene}${stateText(page, p)}\nDialogue in reading order: ${p.dialogue.map((d) => `${d.speaker}: "${d.text.replace(/\n/g, '')}" at ${JSON.stringify(box(p, d))}`).join('; ')}`).join('\n')}\n${baked ? 'Render the quoted Japanese dialogue verbatim in vertical columns inside exactly the indicated balloons. No extra words.' : 'Do NOT render any text, letters, page number or storyboard labels. Keep white EMPTY balloons in precisely the supplied positions; typography will be added separately. Do not draw faces, hands, receipts or rings underneath those balloon footprints.'}\nNo extra panels. No top dialogue strips. Integrate balloons into each composition with natural white space. Economical ink, white backgrounds in closeups, only a few simple location contours in establishing shots. NO wood grain, grass texture, wall texture, excessive strands, fabric micro-hatching, photorealism or glossy gradients. Clear purposeful acting, different shot sizes, coherent hands. CAST: ${JSON.stringify(cast)}. CONTINUITY: ${config.continuity || 'Preserve reference identities and props.'}`;
   }
