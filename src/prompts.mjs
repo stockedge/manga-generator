@@ -103,6 +103,9 @@ export function panelPrompt(
         action: panel.action,
         emotion: panel.emotion,
         camera: panel.camera,
+        ...(panel.cameraCrop === undefined
+          ? {}
+          : { cameraCrop: panel.cameraCrop }),
         production: panel.production,
         state: sceneState,
       }),

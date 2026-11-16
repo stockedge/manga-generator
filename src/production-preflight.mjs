@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { cropRectangle } from './artwork-crop.mjs';
+import { mangaStatistics } from './manga-statistics.mjs';
 
 const round = (value) => Math.round(value * 1000) / 1000;
 function savedImage(config, panel, root) {
@@ -253,6 +254,7 @@ export function inspectProduction(config, { root } = {}) {
   return {
     panels,
     pages,
+    statistics: mangaStatistics(config),
     warnings: panels.filter(
       (p) => p.issues.length || p.compositionIssues.length,
     ).length,

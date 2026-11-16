@@ -1018,6 +1018,37 @@ try {
     /Composition review needed: 01-1:.*未使用面積/,
   );
   assert.ok(JSON.parse(preparedComposition.stdout).request);
+  const savedPanelJobs = fs.readFileSync(
+    folder + '/workflow/panel-jobs.json',
+    'utf8',
+  );
+  const staleJobs = JSON.parse(savedPanelJobs);
+  staleJobs.find((j) => j.id === '01-1').prompt +=
+    '\nPLANNED CAMERA CROP for panel 01-1: shoulder';
+  fs.writeFileSync(
+    folder + '/workflow/panel-jobs.json',
+    JSON.stringify(staleJobs),
+  );
+  const stalePreparation = spawnSync(
+    process.execPath,
+    ['cli/generation.mjs', 'prepare', '01-1'],
+    {
+      cwd: root,
+      env: { ...process.env, MANGA_PROJECT: file },
+      encoding: 'utf8',
+      windowsHide: true,
+    },
+  );
+  assert.notEqual(stalePreparation.status, 0);
+  assert.match(
+    stalePreparation.stderr,
+    /Regenerate panel-jobs.json: planned cameraCrop changed/,
+  );
+  fs.writeFileSync(folder + '/workflow/panel-jobs.json', savedPanelJobs);
+  draftPanel.cameraCrop = 'unrecognized';
+  save(c);
+  assert.throws(() => run('check'), /Unknown planned cameraCrop/);
+  delete draftPanel.cameraCrop;
   draftPanel.artworkCrop = [0, 200, 1024, 800];
   save(c);
   assert.notEqual(

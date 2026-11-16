@@ -83,6 +83,7 @@ function work(relative) {
       audit.warnings + audit.pages.filter((p) => p.issues.length).length,
     compositionWarnings: audit.compositionWarnings,
     pageComposition: audit.pages,
+    statistics: audit.statistics,
     preflight: audit.panels.filter(
       (p) => p.issues.length || p.compositionIssues.length,
     ),

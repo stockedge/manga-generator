@@ -28,6 +28,20 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
   requireDesignSeal(root, c, configFile);
   const j = jobs.find((j) => j.id === id);
   assert.ok(j, 'Unknown panel');
+  if (mode === 'prepare') {
+    const panel = c.pages
+      .flatMap((page) => page.panels)
+      .find((p) => p.id === id);
+    const prefix = 'PLANNED CAMERA CROP for panel ' + id + ': ';
+    const stored = j.prompt
+      .split('\n')
+      .filter((line) => line.startsWith(prefix));
+    assert.deepEqual(
+      stored,
+      panel.cameraCrop === undefined ? [] : [prefix + panel.cameraCrop],
+      'Regenerate panel-jobs.json: planned cameraCrop changed for ' + id,
+    );
+  }
   requireReview(root, c, configFile, 'source');
   requireReview(root, c, configFile, 'script');
   const reviewPage = c.pages.find((page) =>
@@ -57,6 +71,11 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
         'Page composition review needed: ' + reviewPage.id + ': ' + warning,
       );
   }
+  if (mode === 'prepare')
+    for (const warning of inspectProduction(c).statistics.warnings.filter((w) =>
+      w.panels.includes(id),
+    ))
+      console.error('Statistics review needed: ' + warning.message);
   const editing = mode === 'prepare-edit';
   let prompt = editing
     ? fs.readFileSync(local(process.argv[5]), 'utf8')
