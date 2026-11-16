@@ -66,7 +66,7 @@ export function mangaStatistics(config) {
       const [, , w, h] = p.rect;
       const pageArea = (page.width || 1024) * (page.height || 1536);
       const actors =
-        p.speakers === undefined
+        p.speakers == null
           ? null
           : Object.entries(p.speakers)
               .filter(

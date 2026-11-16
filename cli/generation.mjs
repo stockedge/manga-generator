@@ -28,6 +28,20 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
   requireDesignSeal(root, c, configFile);
   const j = jobs.find((j) => j.id === id);
   assert.ok(j, 'Unknown panel');
+  if (mode === 'prepare') {
+    const panel = c.pages
+      .flatMap((page) => page.panels)
+      .find((p) => p.id === id);
+    const prefix = 'PLANNED CAMERA CROP for panel ' + id + ': ';
+    const stored = j.prompt
+      .split('\n')
+      .filter((line) => line.startsWith(prefix));
+    assert.deepEqual(
+      stored,
+      panel.cameraCrop === undefined ? [] : [prefix + panel.cameraCrop],
+      'Regenerate panel-jobs.json: planned cameraCrop changed for ' + id,
+    );
+  }
   requireReview(root, c, configFile, 'source');
   requireReview(root, c, configFile, 'script');
   const reviewPage = c.pages.find((page) =>

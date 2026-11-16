@@ -52,6 +52,13 @@ const unknown = mangaStatistics({
   ],
 });
 assert.equal(unknown.people.unknown, 1);
+const nullSpeakers = structuredClone(config);
+nullSpeakers.pages[0].panels[0].speakers = null;
+nullSpeakers.pages[0].panels[0].dialogue = [];
+const nullStats = mangaStatistics(nullSpeakers);
+assert.equal(nullStats.people.unknown, 1);
+assert.equal(nullStats.panels[0].registeredVisiblePeople, null);
+assert.equal(nullStats.panels[0].cameraCrop, null);
 const consecutive = {
   cast: { a: {} },
   pages: Array.from({ length: 4 }, (_, i) => ({
