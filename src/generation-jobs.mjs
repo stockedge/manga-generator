@@ -6,6 +6,7 @@ import { qualityInstructions } from './quality.mjs';
 import { referenceInstructions } from './face-design.mjs';
 import { modernPrompts, referenceManifest, panelPrompt } from './prompts.mjs';
 import { decisionContext, reviewContext } from './review-context.mjs';
+import { cropRectangle } from './artwork-crop.mjs';
 export function createGenerationJobs({ config, local, stateFor, svg }) {
   const cast = config.cast,
     workflowDir = config.workflowDir || 'workflow',
@@ -22,11 +23,19 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
     const s = stateFor(page, p);
     return Object.keys(s).length ? '\nSECTION STATE: ' + JSON.stringify(s) : '';
   };
+  const cropText = (p) =>
+    cropRectangle(p.artworkCrop)
+      ? `\nEXISTING MATERIAL CROP: ${JSON.stringify(p.artworkCrop)} in the source PNG's native pixels. This is compositor metadata for reusing existing artwork. For NEW artwork, compose to the target panel aspect without copying surrounding white margins; re-measure or remove this crop before adopting a new image.`
+      : '';
   function promptBase(page, baked = false) {
     return `Use case: illustration-story. Produce ONE finished monochrome manga page, 1024x1536 portrait, Japanese RIGHT-TO-LEFT reading. Use the supplied canonical references. The storyboard is the exact layout: preserve ALL panel rectangle positions and sizes and white balloon footprints. Gray face rectangles and labeled mouth anchors are exact reserved character positions, not final artwork. Preserve them; balloon tails must point to those actors. Additional artwork references preserve identity; their old layouts do not override this plan.\nSTYLE: ${config.style}\nPAGE PURPOSE: ${page.purpose}.\n${page.panels.map((p) => `Panel ${p.order}, rectangle [x,y,width,height]=${JSON.stringify(p.rect)}: ${p.scene}${stateText(page, p)}\nDialogue in reading order: ${p.dialogue.map((d) => `${d.speaker}: "${d.text.replace(/\n/g, '')}" at ${JSON.stringify(box(p, d))}`).join('; ')}`).join('\n')}\n${baked ? 'Render the quoted Japanese dialogue verbatim in vertical columns inside exactly the indicated balloons. No extra words.' : 'Do NOT render any text, letters, page number or storyboard labels. Keep white EMPTY balloons in precisely the supplied positions; typography will be added separately. Do not draw faces, hands, receipts or rings underneath those balloon footprints.'}\nNo extra panels. No top dialogue strips. Integrate balloons into each composition with natural white space. Economical ink, white backgrounds in closeups, only a few simple location contours in establishing shots. NO wood grain, grass texture, wall texture, excessive strands, fabric micro-hatching, photorealism or glossy gradients. Clear purposeful acting, different shot sizes, coherent hands. CAST: ${JSON.stringify(cast)}. CONTINUITY: ${config.continuity || 'Preserve reference identities and props.'}`;
   }
   function prompt(page, baked = false) {
-    return promptBase(page, baked) + drawingInstructions;
+    return (
+      promptBase(page, baked) +
+      drawingInstructions +
+      page.panels.map(cropText).join('')
+    );
   }
   function job(page) {
     const references = [
@@ -37,12 +46,15 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
         ...page.panels.flatMap((p) => stateFor(page, p).references || []),
       ]),
     ];
+    /** @type {Record<string, any>} */
     const spec = {
       page: page.id,
       prompt: prompt(page) + referenceInstructions(config, references),
       references,
       rectangles: page.panels.map((p) => p.rect),
     };
+    if (page.panels.some((p) => p.soundEffects?.length))
+      spec.soundEffects = page.panels.map((p) => p.soundEffects || []);
     if (modernPrompts(config)) {
       for (const file of page.panels.flatMap((p) => p.references || []))
         if (!references.includes(file)) references.push(file);
@@ -72,7 +84,8 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
                   (line) =>
                     !line.startsWith('TASK:') && !line.startsWith('OUTPUT:'),
                 )
-                .join('\n'),
+                .join('\n') +
+              cropText(p),
           )
           .join('\n');
     }
@@ -90,7 +103,11 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
       JSON.stringify(spec) +
         hash(svg(page, null, true)) +
         references
-          .filter((r) => !layoutReference(r))
+          .filter(
+            (r) =>
+              !layoutReference(r) ||
+              page.panels.some((p) => p.storyboardImage === r),
+          )
           .map((r) =>
             fs.existsSync(local(r))
               ? hash(fs.readFileSync(local(r)))
@@ -111,7 +128,9 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
   function panelJobBase(page, p) {
     if (panelsOnly) {
       const [x, y, w, h] = p.rect;
-      const instructions = `Use case: illustration-story. Draw ONE monochrome manga panel, aspect ${w}:${h}. No page layout, borders, speech bubbles, captions, letters or watermark. Leave the storyboard balloon footprints WHITE and EMPTY; typography and balloon shapes will be added by the compositor. Preserve the marked character positions.\nSTYLE: ${config.style}\nCAST: ${JSON.stringify(cast)}\nCONTINUITY: ${config.continuity || 'Preserve reference identities.'}\nSCENE: ${p.scene}${stateText(page, p)}\nACTING/SHOT: ${JSON.stringify({ action: p.action, emotion: p.emotion, camera: p.camera })}\nLocal mouth/face positions: ${JSON.stringify(Object.fromEntries(Object.entries(p.speakers || {}).map(([id, s]) => [id, { ...s, anchor: s.anchor?.map((v, i) => v - [x, y][i]), face: s.face?.map((v, i) => (i < 2 ? v - [x, y][i] : v)) }])))}\nReserved white rectangles [x,y,width,height]: ${JSON.stringify(p.dialogue.map((d) => box(p, d).map((v, i) => (i < 2 ? v - [x, y][i] : v))))}\nUse sparse background contours, purposeful expressions, varied ink pressure. Avoid glossy gradients, microtexture, extra people and redundant decorations.`;
+      const instructions =
+        `Use case: illustration-story. Draw ONE monochrome manga panel, aspect ${w}:${h}. No page layout, borders, speech bubbles, captions, letters or watermark. Leave the storyboard balloon footprints WHITE and EMPTY; typography and balloon shapes will be added by the compositor. Preserve the marked character positions.\nSTYLE: ${config.style}\nCAST: ${JSON.stringify(cast)}\nCONTINUITY: ${config.continuity || 'Preserve reference identities.'}\nSCENE: ${p.scene}${stateText(page, p)}\nACTING/SHOT: ${JSON.stringify({ action: p.action, emotion: p.emotion, camera: p.camera })}\nLocal mouth/face positions: ${JSON.stringify(Object.fromEntries(Object.entries(p.speakers || {}).map(([id, s]) => [id, { ...s, anchor: s.anchor?.map((v, i) => v - [x, y][i]), face: s.face?.map((v, i) => (i < 2 ? v - [x, y][i] : v)) }])))}\nReserved white rectangles [x,y,width,height]: ${JSON.stringify(p.dialogue.map((d) => box(p, d).map((v, i) => (i < 2 ? v - [x, y][i] : v))))}\nUse sparse background contours, purposeful expressions, varied ink pressure. Avoid glossy gradients, microtexture, extra people and redundant decorations.` +
+        cropText(p);
       const references = [
         ...new Set([
           ...(config.references || []),
@@ -127,6 +146,9 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
           (p.storyboardSketch === undefined
             ? ''
             : JSON.stringify(p.storyboardSketch)) +
+          (p.storyboardImage === undefined
+            ? ''
+            : JSON.stringify({ storyboardImage: p.storyboardImage })) +
           JSON.stringify({
             rect: p.rect,
             dialogue: p.dialogue,
@@ -136,7 +158,7 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
             references,
           }) +
           references
-            .filter((f) => !layoutReference(f))
+            .filter((f) => !layoutReference(f) || p.storyboardImage === f)
             .map((f) =>
               fs.existsSync(local(f))
                 ? hash(fs.readFileSync(local(f)))
@@ -197,15 +219,16 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
       );
       const references = manifest.map((item) => item.file);
       references.forEach(local);
-      const instructions = panelPrompt(
-        config,
-        page,
-        p,
-        state,
-        p.dialogue.map((d) => box(p, d)),
-        manifest,
-        drawingInstructions,
-      );
+      const instructions =
+        panelPrompt(
+          config,
+          page,
+          p,
+          state,
+          p.dialogue.map((d) => box(p, d)),
+          manifest,
+          drawingInstructions,
+        ) + cropText(p);
       const fingerprint = hash(
         instructions +
           JSON.stringify({ policy: config.promptPolicy, panel: p, manifest }) +
@@ -248,7 +271,12 @@ export function createGenerationJobs({ config, local, stateFor, svg }) {
       : j;
   }
   function panelJob(page, p) {
-    const j = panelJobCore(page, p);
+    let j = panelJobCore(page, p);
+    if (!modernPrompts(config) && p.soundEffects?.length)
+      j = {
+        ...j,
+        fingerprint: hash(j.fingerprint + JSON.stringify(p.soundEffects)),
+      };
     if (!config.productionDecisions?.length) return j;
     const decisions = decisionContext(
       config,

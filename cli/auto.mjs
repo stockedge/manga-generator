@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { validateGenerationEdit } from '../src/generation-edits.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
@@ -6,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { trackState, checkpoint } from '../src/state-history.mjs';
 import { requireReview, productionMode } from '../src/stage-reviews.mjs';
 import { inspectProduction } from '../src/production-preflight.mjs';
+import { validateTextCardEvidence } from '../src/text-card.mjs';
 
 import { root } from '../src/workspace.mjs';
 const hash = (b) => crypto.createHash('sha256').update(b).digest('hex');
@@ -304,6 +306,20 @@ if (command === 'start') {
   for (const id of ids) {
     const record = generation.panels.find((r) => r.panel === id);
     assert.ok(record, 'Record actual image generation for panel: ' + id);
+    if (record.kind === 'typesetting-background') {
+      const panel = c.pages
+        .flatMap((page) => page.panels)
+        .find((p) => p.id === id);
+      validateTextCardEvidence(
+        panel,
+        c.cast,
+        record,
+        fs.readFileSync(relative(`${c.assetDir}/panels/${id}.png`)),
+        (file) => fs.readFileSync(relative(file)),
+      );
+      continue;
+    }
+    validateGenerationEdit(record, (file) => fs.readFileSync(relative(file)));
     const expected = c.generation?.renderer || 'Codex built-in image_gen';
     assert.equal(
       record.renderer,

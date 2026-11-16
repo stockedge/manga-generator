@@ -11,6 +11,8 @@ node cli/stage-review.mjs mode quality
 
 同じ原作の受付再開ではモードを暗黙に変更しない。異なるモードを指定した再開は拒否する。既存作品の切替にはstage-review modeを使い、通常CLIの履歴保存を通す。切替後は新requestで必要なレビューを取り直す。確定パッケージは変更せず、必要なら改訂版を作る。
 
+明示的なモード切替では、新規作品と同じ `readingProtocol: "two-phase-v1"` も有効にする。画像だけの初読を別プロセスで保存し、その後に原作・脚本との照合を行う。既存の確認記録を初読記録として流用しない。
+
 ## 実装された差
 
 qualityは従来の広いレビュー入力。新規作品と `stage-review mode` で明示切替した作品には `reviewPolicy.version: 3` が付き、economyのartworkは対象コマ、直前直後と明示した依存コマへ絞る。storyboard・letteringは対象ページと境界コマを残す。話者・可視顔・手の記録から人物を収集する。source・script・finalは全文・全体確認を維持する。全工程の独立レビュー、画像だけの初読、合格条件も維持する。旧economy設定を自動移行せず、古い確認記録の意味を変えない。
@@ -40,6 +42,8 @@ node cli/review-run.mjs storyboard 01
 node cli/stage-review.mjs pending
 node cli/review-run.mjs pending
 ```
+
+`review-run` の storyboard は、初読・照合の前に現在の設定から `plan` を再作成し、対象ページと前後・明示依存ページの番号なしPNGを書き出す。ページ番号の再利用やコマ追加後も、既存PNGの存在だけで以前の内容を流用しない。この書き出しは採用素材からの組版で、AI画像の再生成や目視合格ではない。`stage-review prepare-reading` / `prepare` を直接使う手動手順では、対象と境界・依存ページの `plan` とPNG書き出しを先に行う。
 
 既定はインストール済みCodex CLIの `codex exec --ephemeral --json --sandbox read-only`。resume/forkを使わず、リポジトリ外の一時ディレクトリへ対象資料だけをスナップショットし、stdinへ新しい依頼を渡す。親チャットの履歴は渡さず、セッション関連の環境変数も除く。画像だけの初読は画像と観察の依頼だけで別プロセスを起動する。照合はさらに別プロセスで行う。認証・モデル・利用枠はCLIの設定に従う。CLI不在・未ログイン・利用枠不足は失敗として残し、検品済みにしない。
 

@@ -63,13 +63,9 @@ if (command === 'freeze') {
         (j) => j.references,
       )
     : [];
-  // Review renders are derivatives, not production inputs; retain their source and review records.
+  // Review records hash these renders, so portable builds must retain them.
   const productionFiles = files(config.workflowDir || 'workflow').filter(
-    (f) =>
-      !(
-        /\/review\/page-\d{2}\.(svg|png)$/.test(f) ||
-        (f.includes('/quality/') && f.endsWith('.png'))
-      ),
+    (f) => !(f.includes('/quality/') && f.endsWith('.png')),
   );
   const inputs = [
     configFile,
@@ -81,9 +77,18 @@ if (command === 'freeze') {
     'README.md',
     'AGENTS.md',
     ...runtimeFiles(root),
-    ...files('docs'),
+    ...files('docs').filter(
+      (file) =>
+        process.argv.includes('--full-history') ||
+        !file.startsWith('docs/research/'),
+    ),
     ...refs,
     ...actualRefs,
+    ...(fs.existsSync(config.workflowDir + '/generation-log.json')
+      ? JSON.parse(
+          fs.readFileSync(config.workflowDir + '/generation-log.json', 'utf8'),
+        ).panels.flatMap((p) => (p.references || []).map((r) => r.file))
+      : []),
     ...files(config.assetDir || 'assets/v2').filter(
       (file) =>
         process.argv.includes('--full-history') ||
@@ -93,7 +98,9 @@ if (command === 'freeze') {
     ),
     ...productionFiles,
   ];
-  const outputs = files(output).filter((f) => /\.(svg|html|png|pdf)$/.test(f));
+  const outputs = files(output).filter((f) =>
+    /\.(svg|html|png|pdf)$|\.png\.render\.json$/.test(f),
+  );
   fs.writeFileSync(
     lockFile,
     JSON.stringify(

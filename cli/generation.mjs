@@ -1,5 +1,6 @@
 // This records a real tool invocation's inputs/outputs; it does not call image_gen.
 import fs from 'node:fs';
+import { validateGenerationEdit } from '../src/generation-edits.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
@@ -34,7 +35,9 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
   );
   requireReview(root, c, configFile, 'storyboard', reviewPage.id);
   if (c.productionPreflight?.required && mode === 'prepare') {
-    const entry = inspectProduction(c).panels.find((p) => p.panel === id);
+    const entry = inspectProduction(c, { root }).panels.find(
+      (p) => p.panel === id,
+    );
     assert.ok(
       entry && !entry.issues.length,
       'Resolve production preflight before image generation: ' +
@@ -42,6 +45,17 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
         ': ' +
         entry?.issues.join('; '),
     );
+  }
+  if (mode === 'prepare') {
+    const audit = inspectProduction(c, { root });
+    const composition = audit.panels.find((p) => p.panel === id);
+    for (const warning of composition?.compositionIssues || [])
+      console.error('Composition review needed: ' + id + ': ' + warning);
+    for (const warning of audit.pages.find((p) => p.page === reviewPage.id)
+      ?.issues || [])
+      console.error(
+        'Page composition review needed: ' + reviewPage.id + ': ' + warning,
+      );
   }
   const editing = mode === 'prepare-edit';
   let prompt = editing
@@ -212,6 +226,81 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
       note: 'Actual tool prompt and snapshots; acceptedJob after later layout changes may differ from this generation plan.',
     });
   console.log(image);
+} else if (mode === 'record-edit') {
+  assert.ok(
+    input && process.argv[5] && process.argv[6],
+    'Use record-edit ID ORIGINAL.png EDITED.png INSTRUCTION.txt',
+  );
+  assert.ok(
+    jobs.some((j) => j.id === id),
+    'Unknown panel',
+  );
+  const inputBytes = fs.readFileSync(local(input));
+  const history = local(c.workflowDir + '/generation-history');
+  const parentFile = fs
+    .readdirSync(history)
+    .filter((f) => f.endsWith('.json'))
+    .find((f) => {
+      const record = JSON.parse(fs.readFileSync(path.join(history, f), 'utf8'));
+      return record.panel === id && record.imageHash === hash(inputBytes);
+    });
+  assert.ok(
+    parentFile,
+    'No actual generation evidence for external edit input',
+  );
+  const parentRecord = c.workflowDir + '/generation-history/' + parentFile;
+  const parentBytes = fs.readFileSync(local(parentRecord));
+  const parent = JSON.parse(parentBytes.toString('utf8'));
+  validateGenerationEdit(parent, (f) => fs.readFileSync(local(f)));
+  const instruction = fs.readFileSync(local(process.argv[6]), 'utf8');
+  assert.ok(
+    instruction.trim().length >= 12,
+    'Describe the actual external edit',
+  );
+  const bytes = fs.readFileSync(local(process.argv[5]));
+  assert.ok(
+    bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+    'Expected edited PNG',
+  );
+  const imageHash = hash(bytes);
+  assert.notEqual(
+    imageHash,
+    parent.imageHash,
+    'External edit must change the image',
+  );
+  const image =
+    c.assetDir + '/generated/' + id + '-' + imageHash.slice(0, 16) + '.png';
+  if (fs.existsSync(local(image)))
+    assert.equal(hash(fs.readFileSync(local(image))), imageHash);
+  else fs.writeFileSync(local(image), bytes, { flag: 'wx' });
+  const record = {
+    ...parent,
+    imageHash,
+    image,
+    recordedAt: new Date().toISOString(),
+    externalEdit: {
+      parentRecord,
+      parentRecordHash: hash(parentBytes),
+      inputImage: parent.image,
+      inputHash: parent.imageHash,
+      outputHash: imageHash,
+      renderer: 'external pixel editor',
+      instruction,
+      instructionHash: hash(Buffer.from(instruction)),
+    },
+    note: 'Externally edited derivative; original generation prompt/model retained as parent evidence, not a new AI generation.',
+  };
+  validateGenerationEdit(record, (f) => fs.readFileSync(local(f)));
+  const file =
+    c.workflowDir +
+    '/generation-history/' +
+    id +
+    '-' +
+    imageHash.slice(0, 16) +
+    '.json';
+  if (fs.existsSync(local(file))) assert.equal(read(file).imageHash, imageHash);
+  else write(file, record);
+  console.log(image);
 } else if (mode === 'compile') {
   const history = local(c.workflowDir + '/generation-history');
   const records = fs
@@ -227,11 +316,16 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
       const samePanel = records
         .filter((r) => r.panel === p.id && r.imageHash === adopted)
         .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))[0];
-      if (samePanel) return samePanel;
+      if (samePanel) {
+        validateGenerationEdit(samePanel, (f) => fs.readFileSync(local(f)));
+        return samePanel;
+      }
       const reused = records
         .filter((r) => r.imageHash === adopted)
         .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))[0];
       assert.ok(reused, 'No actual generation evidence for ' + p.id);
+      validateGenerationEdit(reused, (f) => fs.readFileSync(local(f)));
+      validateGenerationEdit(reused, (f) => fs.readFileSync(local(f)));
       return {
         ...reused,
         panel: p.id,
@@ -247,5 +341,5 @@ if (mode === 'prepare' || mode === 'prepare-edit') {
   console.log('Saved actual generation log: ' + panels.length + ' panels');
 } else
   throw new Error(
-    'Use prepare ID [--renderer NAME] [--model ID] [--seed N] | prepare-edit ID TARGET.png PROMPT.txt [--reference SUPPORT.png] [--renderer NAME] [--model ID] [--seed N] | record ID REQUEST.json GENERATED.png | compile',
+    'Use prepare ID [--renderer NAME] [--model ID] [--seed N] | prepare-edit ID TARGET.png PROMPT.txt [--reference SUPPORT.png] [--renderer NAME] [--model ID] [--seed N] | record ID REQUEST.json GENERATED.png | record-edit ID ORIGINAL.png EDITED.png INSTRUCTION.txt | compile',
   );

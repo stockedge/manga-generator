@@ -2,6 +2,7 @@ import { createTemporary } from '../src/temporary.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { copyRuntime } from './support.mjs';
 import { root } from '../src/workspace.mjs';
@@ -168,6 +169,94 @@ try {
       '--reason',
       'Synthetic blank fixture; no artwork quality is certified',
     );
+  const generatedBytes = Buffer.concat([
+    png,
+    Buffer.from('synthetic generated fixture'),
+  ]);
+  write('fixture/generated.png', generatedBytes);
+  for (const j of jobs) {
+    const request = JSON.parse(run('generation', 'prepare', j.id)).request;
+    run(
+      'generation',
+      'record',
+      j.id,
+      request,
+      path.join(folder, 'fixture/generated.png'),
+    );
+  }
+  const editedBytes = Buffer.concat([
+    png,
+    Buffer.from('synthetic external edit'),
+  ]);
+  write('fixture/edited.png', editedBytes);
+  write(
+    'fixture/edit-instruction.txt',
+    'Synthetic fixture: remove an unwanted mark from the white margin.',
+  );
+  run(
+    'generation',
+    'record-edit',
+    panel.id,
+    'fixture/generated.png',
+    'fixture/edited.png',
+    'fixture/edit-instruction.txt',
+  );
+  run(
+    'workflow',
+    'accept-panel',
+    panel.id,
+    path.join(folder, 'fixture/edited.png'),
+    '--reviewed',
+  );
+  for (const j of jobs)
+    run(
+      'workflow',
+      'accept-panel',
+      j.id,
+      path.join(folder, 'fixture/generated.png'),
+      '--reviewed',
+    );
+  run(
+    'workflow',
+    'accept-panel',
+    panel.id,
+    path.join(folder, 'fixture/edited.png'),
+    '--reviewed',
+  );
+  run('generation', 'compile');
+  const derivative = read('fixture/workflow/generation-log.json').panels.find(
+    (p) => p.panel === panel.id,
+  );
+  assert.equal(
+    derivative.imageHash,
+    crypto.createHash('sha256').update(editedBytes).digest('hex'),
+  );
+  assert.equal(
+    derivative.externalEdit.inputHash,
+    crypto.createHash('sha256').update(generatedBytes).digest('hex'),
+  );
+  const originalEvidence = fs.readFileSync(
+    path.join(folder, derivative.externalEdit.parentRecord),
+  );
+  fs.appendFileSync(
+    path.join(folder, derivative.externalEdit.parentRecord),
+    ' ',
+  );
+  assert.throws(
+    () => run('generation', 'compile'),
+    /External edit parent record changed/,
+  );
+  fs.writeFileSync(
+    path.join(folder, derivative.externalEdit.parentRecord),
+    originalEvidence,
+  );
+  run(
+    'workflow',
+    'accept-panel',
+    panel.id,
+    path.join(folder, config.references[0]),
+    '--reviewed',
+  );
   run('workflow', 'quality-plan');
   const quality = read(`fixture/workflow/quality/${panel.id}.template.json`);
   quality.observation =
@@ -217,6 +306,77 @@ try {
   // This test records synthetic observations; it certifies no real image review.
   config.productionReview = { required: true, readingProtocol: 'two-phase-v1' };
   write('fixture/workflow/storyboards-unnumbered/page-01.png', png);
+  const renderBase = 'fixture/workflow/storyboards-unnumbered/page-01';
+  const svgBytes = fs.readFileSync(path.join(folder, renderBase + '.svg'));
+  const digest = (bytes) =>
+    crypto.createHash('sha256').update(bytes).digest('hex');
+  write(renderBase + '.png.render.json', {
+    scale: 1,
+    svgHash: digest(svgBytes),
+    pngHash: digest(png),
+  });
+  firstReadingRequest(folder, config, 'storyboard', '01');
+  write(
+    renderBase + '.svg',
+    Buffer.concat([svgBytes, Buffer.from(' changed')]),
+  );
+  assert.throws(
+    () => firstReadingRequest(folder, config, 'storyboard', '01'),
+    /older SVG/,
+  );
+  write(renderBase + '.svg', svgBytes);
+  write(renderBase + '.png', Buffer.concat([png, Buffer.from(' changed')]));
+  assert.throws(
+    () => firstReadingRequest(folder, config, 'storyboard', '01'),
+    /PNG changed/,
+  );
+  write(renderBase + '.png', png);
+  const receipt = { scale: 1, svgHash: digest(svgBytes), pngHash: digest(png) };
+  write(renderBase + '.png.render.json', { ...receipt, scale: 0.25 });
+  assert.throws(
+    () => firstReadingRequest(folder, config, 'storyboard', '01'),
+    /full-size/,
+  );
+  write(renderBase + '.png.render.json', '{ interrupted');
+  assert.throws(
+    () => firstReadingRequest(folder, config, 'storyboard', '01'),
+    SyntaxError,
+  );
+  // A receipt published before its replacement PNG must fail closed.
+  write(renderBase + '.png.render.json', {
+    ...receipt,
+    pngHash: digest(Buffer.from('new pending image')),
+  });
+  assert.throws(
+    () => firstReadingRequest(folder, config, 'storyboard', '01'),
+    /PNG changed/,
+  );
+  write(renderBase + '.png.render.json', receipt);
+  // Simulate replacement immediately after the bytes are read: the request must
+  // bind the bytes actually validated, never a second, unvalidated PNG read.
+  const originalRead = fs.readFileSync;
+  const imagePath = path.join(folder, renderBase + '.png');
+  try {
+    fs.readFileSync = function (file, ...args) {
+      const bytes = originalRead.call(fs, file, ...args);
+      if (file === imagePath)
+        fs.writeFileSync(
+          imagePath,
+          Buffer.concat([png, Buffer.from(' concurrently replaced')]),
+        );
+      return bytes;
+    };
+    const concurrent = firstReadingRequest(folder, config, 'storyboard', '01');
+    assert.equal(concurrent.images[0].hash, receipt.pngHash);
+  } finally {
+    fs.readFileSync = originalRead;
+  }
+  assert.throws(
+    () => firstReadingRequest(folder, config, 'storyboard', '01'),
+    /PNG changed/,
+  );
+  write(renderBase + '.png', png);
+  fs.unlinkSync(path.join(folder, renderBase + '.png.render.json'));
   const request = firstReadingRequest(folder, config, 'storyboard', '01');
   assert.ok(!JSON.stringify(request).includes(panel.scene));
   assert.ok(

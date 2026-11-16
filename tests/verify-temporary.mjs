@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import {
-  createTemporary,
-  cleanupTemporary,
-  removeTemporary,
-  cacheRoot,
-} from '../src/temporary.mjs';
+const previousCache = process.env.MANGA_CACHE_DIR;
+const testCache = fs.mkdtempSync(path.join(os.tmpdir(), 'manga-cache-test-'));
+process.env.MANGA_CACHE_DIR = testCache;
+const { createTemporary, cleanupTemporary, removeTemporary, cacheRoot } =
+  await import('../src/temporary.mjs');
 
 const active = createTemporary('test');
 const stale = createTemporary('test');
@@ -68,4 +68,8 @@ try {
   active.cleanup();
   stale.cleanup();
   linked.cleanup();
+  if (previousCache === undefined) delete process.env.MANGA_CACHE_DIR;
+  else process.env.MANGA_CACHE_DIR = previousCache;
+  if (fs.existsSync(testCache) && fs.readdirSync(testCache).length === 0)
+    fs.rmdirSync(testCache);
 }

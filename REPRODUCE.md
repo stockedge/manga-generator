@@ -1,5 +1,7 @@
 # 汎用の漫画制作ワークフロー（第8版）
 
+任意の補助機能とCLI修正は [制作補助と受渡し](docs/ASSIST.md) を参照。未指定の作品へ画風・擬音・配置を一律追加しない。
+
 品質優先／節約の選択と切替は [制作モード](docs/PRODUCTION-MODES.md) を参照。新規受付は `node cli/auto.mjs start 原作.txt --mode economy`、既存作品はMANGA_PROJECTを明示して `node cli/stage-review.mjs mode quality`。省略時は従来動作を維持する。
 
 独立レビューは `node cli/review-run.mjs script all`、変更対象の確認は `node cli/stage-review.mjs pending`。新規作品はsource・script・全ネームのレビュー後に `node cli/stage-review.mjs seal` を行ってから作画する。修正は `reopen "理由"` から可能。節約出力の全文はdetails/requestへ保存され、`--verbose` でも取得できる。比較は `node cli/compare-modes.mjs`。
@@ -8,6 +10,8 @@
 
 新規作品の生成指示と、画像だけの初読を保存してから照合する手順は [生成指示と読順レビュー](docs/PROMPTS.md) を参照。既存作品の指示・採用・レビューは自動移行しない。
 
+コマ素材の切り出しは `panel.artworkCrop: [sx, sy, sw, sh]` で指定する。単位は元PNGのピクセルで、左上と幅・高さを表し、範囲外や負の値は拒否する。パネルPNGが必要で、元の画像は変更せず、選択した範囲の縦横比を保って配置する。顔・口・保護範囲のページ座標は自動追従しないため、変更後の実画像で測り直す。生成指示と採用のfingerprintも変わるので、理由付きで設計を開き直し、ネーム確認、同一素材の再採用、描画・文字配置の確認を正規手順で行う。背景の白さだけを理由に人物や重要な手・小道具を切らない。
+
 メモなどを横書きで引用する場合は、セリフへ `textDirection: "horizontal"` と `textColumns: ["一行目", "二行目"]` を指定する。配列は表示行の順番で、結合した内容は改行を除いた `text` と完全一致する必要がある。省略時または `vertical` は従来の縦書き。横書きも顔・手・小道具・尾・読順の検査対象で、文字を変えずに向きを変更した場合も `plan`、ネーム、採用・合成・独立レビューを更新する。
 
 scriptの合格には全コマの `dialogueReview` が必要です。原作の問い返答や指示対象を復元してからネームと画像編集へ進みます。OCRの一致は脚本の自然さの証明ではありません。詳細は[工程レビュー](docs/REVISION-AND-REVIEWS.md)を参照してください。
@@ -15,6 +19,8 @@ scriptの合格には全コマの `dialogueReview` が必要です。原作の�
 ネーム設計は [読順・場面転換・時間と感情](docs/NARRATIVE-FLOW.md) に従う。原作の情報公開順と感情の変化を先に設計し、`workflow plan` が保存する `workflow/narrative-plan.json` と `workflow/reading-flow/` で全コマの接続を検討する。番号なしの実読レビューを先に行い、番号付き経路と照合する。配置が合わないときは人物配置・構図・コマ分割へ戻る。共通処理変更後の既存ロックは、新基準の検品・再現検証を通してから改訂版を固定する。
 
 吹き出しの尾が小道具の線へ接近する場合は `dialogue.tailLength` に24〜160の整数で最大長を指定できる（未指定160）。口・顔の座標は実画像のまま保ち、`plan` → 同一素材の正式再採用（新規生成と区別）→ `preview` とPNG → 独立文字レビューを行う。長さだけを変えて検品済みと扱わない。
+
+画面外の声が、画面内の人物の台詞と誤読される場合は、話者を `{"kind":"offscreen","offscreenEdge":"right"}` または `"left"` とし、隣接コマ・実際の位置関係から声の来る側を指定できる。枠端の6px内側へ向く尾の長さが8〜160pxになる位置に吹き出しを置く（`tailLength` 指定時はその最大長以下）。これは枠外の方向表示で、見えない口・顔の座標を作る機能ではない。顔や口のanchorと併用できず、顔・他の吹き出し・重要な手や物を横切らないよう検査する。未指定の旧作品は変更しない。指定後も番号なし画像の実読で帰属を確認する。
 
 修正前後の状態保存、復元、セリフの視線誘導計画、各工程の独立レビューは [修正・レビュー手順](docs/REVISION-AND-REVIEWS.md) に従う。直接編集の前後は `history checkpoint`、作品内の編集スクリプトは `history run` を使う。
 
@@ -56,6 +62,8 @@ costumes のキーは cast の人物IDと一致させる。objects は小道具I
 
 ## ネームと人物位置を決める
 
+1ページは2〜8コマに対応する。会話の読順に合わせてコマを分割できるが、ページの安全領域・コマ同士の非重複・右から左への順序・文字と顔の検査は引き続き必要。コマ数だけで読みやすさを判断しない。
+
 引用や台詞の一部だけ小さくする場合は、任意の `textSizeRanges: [{"start": 3, "end": 5, "fontSize": 22}]` を指定できる。start は0始まり、end は含まない位置で、`text` から改行LFを除いた全文のUnicodeコードポイント単位で数える（絵文字などのサロゲートペアを1文字と数える）。範囲は空でなく、昇順で重複せず全文内に収める。fontSize は20〜26の整数。縦書き・横書き・列をまたぐ範囲に対応し、本文と列指定は変更しない。吹き出し・衝突検査の寸法は安全側の26pxのまま。未指定時は従来の描画。指定・変更後はplanと必要な採用・工程レビューを更新する。
 
 意味のまとまりで縦書きの列を明示する場合は、セリフに任意の `textColumns` を指定する。例えば `"text":"違う。これは、傷じゃない。","textColumns":["違う。これは、","傷じゃない。"]`。配列順に右から左へ配置する。各列は空でない文字列で、連結した文字が `text` の改行を除いた全文と完全に一致する必要がある。欠落・追加・空列は拒否する。指定時は `capacity` で再分割せず、列数と最長列から吹き出しの幅・高さを計算する。未指定のセリフは従来の容量指定を使う。これは語境界の自動判定ではなく作者・エージェントの編集指定である。
@@ -95,6 +103,8 @@ node cli/workflow.mjs accept-panel 01-1 "works/my-story/assets/candidates/01-1/�
 直接取り込むこともできる。生成手段・モデル名が分かる場合は --renderer・--model で記録する。分からない値を推測して書かない。候補の申告値は採用記録へ引き継ぐ。採用時のジョブ・参照ハッシュ・由来、採用理由、差し替え前後の素材を記録する。assetSources には原作・参照素材のパスをキーに、由来や利用条件を記入できる。記録は法的な権利判定ではない。
 
 ## 合成原稿を確認する
+
+人物・手・小道具を描かない白地の説明カードは、`src/text-card.mjs` の `whiteTextCard(幅, 高さ)` でSVGとPNGを作れる。これはAI作画ではない。生成ログは `kind: "typesetting-background"`、`renderer: "Node.js deterministic white-background encoder"`、`model`・`prompt`・`promptHash` は `null`、`references: []` とし、`sourceSvg`、`sourceSvgHash`、`imageHash` を保存する。完成検査はcaptionだけで人物・保護物・手・小道具がないこと、SVGの白地、PNGの寸法・CRC・全白画素を照合する。一般の絵をこの形式で記録することは拒否する。正式採用・原作・ネーム・描画・文字・最終稿のレビューは通常どおり必要。
 
 全コマを取り込んだら、実際の絵に合わせて顔・口の座標、吹き出しの位置を調整する。計画が変わったら plan をやり直し、失効した素材を目視して再採用または再生成する。古い指示の候補をそのまま再採用することはできない。
 
@@ -180,11 +190,11 @@ Node.js 24、WindowsのMeiryoとChrome/Edgeで検証。別作品の持ち運び�
 
 新しい履歴の世代一覧は `.manga-history/states/<作品ID>/*.json.gz` に圧縮保存する。旧 `.json` も一覧・復元・履歴bundleで読める。既存分は、MANGA_PROJECTを明示して `node cli/history.mjs compress` で移行できる。全作品分は `node cli/history.mjs compress-all`。旧バージョンの制作コマンドを終了してから実行する。1ファイルずつ状態ハッシュと復号後の元バイト列を検証し、圧縮版を保存してから旧JSONを除く。中断後は同じコマンドを再実行できる。画像の保管実体・世代・復元内容は削減しない。statusとworkflow check、reproduce checkは履歴走査を起動しない。
 
-新しい通常の `freeze` は配布用として、素材の `history/` と `candidates/` を一括収録しない。ただしジョブが直接参照する素材は残す。原作・採用素材・参照・配置・検品記録・生成指示・完成物は保持する。候補と旧素材を含む制作パッケージが必要なら `node cli/reproduce.mjs freeze --full-history` の後で `bundle --compressed` を使う。全世代の復元用アーカイブは別途 `node cli/history.mjs bundle 新規保存先.tar.gz` で保存する。既存ロックの入力範囲と確定済みreleaseは変更せず、新しい固定・パッケージから適用する。
+新しい通常の `freeze` は配布用として、素材の `history/` と `candidates/`、共通資料の `docs/research/` を一括収録しない。ただしジョブや生成記録が明示的に参照する素材は残す。共通の制作手順書は引き続き収録・検証する。原作・採用素材・参照・配置・検品記録・生成指示・完成物は保持する。候補・旧素材・`docs/research/` 全体を含む制作パッケージが必要なら `node cli/reproduce.mjs freeze --full-history` の後で `bundle --compressed` を使う。全世代の復元用アーカイブは別途 `node cli/history.mjs bundle 新規保存先.tar.gz` で保存する。既存ロックの入力範囲と確定済みreleaseは変更せず、新しい固定・パッケージから適用する。
 
 ブラウザと独立したテストfixtureは、Windowsでは `%LOCALAPPDATA%/manga-generator/cache`、その他はOSの一時領域に保存する。変更先は `MANGA_CACHE_DIR` で指定できる。テスト終了時に掃除し、失敗時の調査用に保持する場合は `MANGA_KEEP_TEST_TMP=1` を指定する。`node cli/cleanup.mjs` は24時間以上経過した、この仕組みで所有記録を作成した残骸だけを回収する（生成時にも実施）。実行中の所有者・ブラウザ、リンク、所有記録の不明なディレクトリは残す。従来のリポジトリ内 `tmp` は作品コピーを含み得るため自動削除しない。作業場や履歴を同期対象にする場合、ハッシュ確認によってオンライン専用ファイルが再取得され得る。
 
-再生成できる workflow/review の合成プレビューと workflow/quality の倍率別確認PNGは、パッケージの入力から除く。元の素材、位置情報、検品記録、生成・修正指示は保存し、完成PNG・SVG・HTMLは含める。検品用の画面とPNGは quality-plan と export で作り直せる。
+workflow/review の合成プレビューSVG・PNGは、レビュー記録がそのハッシュを照合するためパッケージへ保存する。workflow/quality の倍率別確認PNGは入力から除き、quality-plan と export で作り直せる。元の素材、位置情報、検品記録、生成・修正指示、完成PNG・SVG・HTMLも保持する。旧パッケージで確認用画像が欠ける場合は、同一ハッシュの画像を復元するか、改訂版で必要な検品・固定・パッケージ検証を行う。検品記録のハッシュを書き換えて欠落を隠さない。
 
 ## 原作URLと生成実行の保存
 
@@ -203,3 +213,5 @@ PNG書き出しは `node cli/export.mjs 対象ディレクトリ 19-1` のよう
 ## Claude Codeと外部ComfyUI
 
 [Claude Codeの実行対応](docs/CLAUDE-CODE.md)、[コミット対象の構築スクリプトと生成手順](docs/COMFYUI.md)を参照。`auto start --renderer "ComfyUI+Qwen-Image-Edit-2511-FP8"` で生成手段を明示し、既存の検品・履歴・再現条件を維持します。
+
+ネーム専用PNGも使用できる。コマへ `"storyboardImage":"works/my-story/assets/planning/01-1-v1.png"` と同じパスの `"references":["works/my-story/assets/planning/01-1-v1.png"]` を指定する。原作・脚本を先に確認し、正の寸法を持つローカルPNGを版ごとの不変パスへ保存する。生成手段・モデル（不明ならnull）・正確な指示・参照を `assetSources` 等へ記録する。PNGはネームでのみ構造化下図を視覚的に置き換え、縦横比を保って収める。下図JSONと失敗候補は残し、変更後は再plan・PNG書き出し・番号なし実読・正式レビューを行う。完成素材数・描画合格には数えず、source/scriptレビュー、seal、正式採用、品質検査を迂回しない。完成原稿とレイヤーへは描画しない。詳細は [ネーム設計](docs/NARRATIVE-FLOW.md#pngによるネーム下図)。

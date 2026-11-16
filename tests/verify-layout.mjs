@@ -37,6 +37,7 @@ try {
   }
   fs.cpSync(path.join(root, 'docs'), path.join(fixture, 'docs'), {
     recursive: true,
+    filter: (file) => file !== path.join(root, 'docs', 'research'),
   });
   const project = 'works/layout-check/workflow.json';
   const run = (file, args = [], cwd = fixture) =>
@@ -167,6 +168,53 @@ try {
     path.join(fixture, config.assetDir, 'candidates', 'unused.png'),
     'unused candidate',
   );
+  const reviewPng = config.workflowDir + '/review/page-01.png';
+  fs.copyFileSync(exported, path.join(fixture, reviewPng));
+  const research = 'docs/research/';
+  fs.mkdirSync(path.join(fixture, research), { recursive: true });
+  const researchFiles = [
+    'unused.txt',
+    'job-reference.png',
+    'actual-reference.png',
+    'log-only-reference.png',
+  ];
+  for (const file of researchFiles)
+    fs.writeFileSync(path.join(fixture, research, file), exportedBytes);
+  const jobFile = path.join(fixture, config.workflowDir, 'panel-jobs.json');
+  const referencedJobs = JSON.parse(fs.readFileSync(jobFile, 'utf8'));
+  referencedJobs[0].references.push(research + 'job-reference.png');
+  fs.writeFileSync(jobFile, JSON.stringify(referencedJobs));
+  fs.writeFileSync(
+    path.join(fixture, config.workflowDir, 'reaction-generation.json'),
+    JSON.stringify({
+      generated: [{ references: [research + 'actual-reference.png'] }],
+    }),
+  );
+  fs.writeFileSync(
+    path.join(fixture, config.workflowDir, 'generation-log.json'),
+    JSON.stringify({
+      panels: [{ references: [{ file: research + 'log-only-reference.png' }] }],
+    }),
+  );
+  run('cli/assist.mjs', ['delivery', 'ready-delivery']);
+  const configPath = path.join(fixture, project);
+  const readyConfig = fs.readFileSync(configPath);
+  const changedConfig = JSON.parse(readyConfig.toString('utf8'));
+  changedConfig.pages[0].panels[0].dialogue[0].text += '変更';
+  fs.writeFileSync(configPath, JSON.stringify(changedConfig));
+  assert.throws(() => run('cli/assist.mjs', ['delivery', 'stale-script']));
+  fs.writeFileSync(configPath, readyConfig);
+  const adoptedPath = path.join(
+    fixture,
+    config.assetDir,
+    'panels',
+    config.pages[0].panels[0].id + '.png',
+  );
+  const adoptedBytes = fs.readFileSync(adoptedPath);
+  fs.appendFileSync(adoptedPath, 'changed');
+  assert.throws(() => run('cli/assist.mjs', ['delivery', 'stale-material']));
+  fs.writeFileSync(adoptedPath, adoptedBytes);
+
   run('cli/reproduce.mjs', ['freeze']);
   run('cli/reproduce.mjs');
   const lock = JSON.parse(
@@ -176,6 +224,41 @@ try {
     ),
   );
   assert.equal(lock.packageScope, 'distribution');
+  assert.ok(lock.outputs[config.outputDir + '/page-01.png.render.json']);
+  const outputSVG = path.join(fixture, config.outputDir, 'page-01.svg');
+  const currentSVG = fs.readFileSync(outputSVG);
+  fs.appendFileSync(outputSVG, 'stale');
+  assert.throws(() => run('cli/assist.mjs', ['delivery', 'old-svg']));
+  fs.writeFileSync(outputSVG, currentSVG);
+  assert.ok(!lock.inputs[research + 'unused.txt']);
+  for (const file of researchFiles.slice(1))
+    assert.ok(
+      lock.inputs[research + file],
+      'Explicit research reference missing',
+    );
+  fs.appendFileSync(
+    path.join(fixture, research, 'unused.txt'),
+    'unrelated edit',
+  );
+  run('cli/reproduce.mjs', ['check']);
+  for (const file of [
+    'docs/AUTOMATIC.md',
+    ...researchFiles.slice(1).map((file) => research + file),
+  ]) {
+    const full = path.join(fixture, file);
+    const before = fs.readFileSync(full);
+    fs.appendFileSync(full, 'synthetic tamper');
+    assert.throws(
+      () => run('cli/reproduce.mjs', ['check']),
+      /Changed saved input/,
+    );
+    fs.writeFileSync(full, before);
+  }
+  run('cli/reproduce.mjs', ['check']);
+  assert.ok(
+    lock.inputs[reviewPng],
+    'Frozen reviews need their exact PNG input',
+  );
   assert.ok(!lock.inputs[config.assetDir + '/history/unused.png']);
   assert.ok(!lock.inputs[config.assetDir + '/candidates/unused.png']);
   for (const file of runtimeFiles(fixture))
@@ -191,6 +274,11 @@ try {
     fixture,
     'releases',
     fs.readdirSync(path.join(fixture, 'releases'))[0],
+  );
+  assert.deepEqual(
+    fs.readFileSync(path.join(bundle, reviewPng)),
+    exportedBytes,
+    'Portable release must preserve the exact reviewed image',
   );
   execFileSync(process.execPath, [path.join(bundle, 'cli/reproduce.mjs')], {
     cwd: path.dirname(fixture),
@@ -282,6 +370,11 @@ try {
     ),
   );
   assert.equal(fullLock.packageScope, 'production');
+  for (const file of researchFiles)
+    assert.ok(
+      fullLock.inputs[research + file],
+      'Full history must retain research',
+    );
   assert.ok(fullLock.inputs[config.assetDir + '/history/unused.png']);
   assert.ok(fullLock.inputs[config.assetDir + '/candidates/unused.png']);
   run('cli/reproduce.mjs', ['bundle', '--compressed']);

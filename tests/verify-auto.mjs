@@ -7,6 +7,137 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import crypto from 'node:crypto';
 import { root } from '../src/workspace.mjs';
+import {
+  whiteTextCard,
+  textCardRenderer,
+  validateTextCardEvidence,
+} from '../src/text-card.mjs';
+import { crc32, deflateSync, inflateSync } from 'node:zlib';
+const textCard = whiteTextCard(32, 16);
+const textPanel = {
+  rect: [0, 0, 32, 16],
+  speakers: {},
+  protected: [],
+  production: { hands: {}, props: [] },
+  dialogue: [{ speaker: 'caption' }],
+};
+const textRecord = {
+  kind: 'typesetting-background',
+  renderer: textCardRenderer,
+  model: null,
+  prompt: null,
+  promptHash: null,
+  references: [],
+  sourceSvg: 'card.svg',
+  sourceSvgHash: crypto.createHash('sha256').update(textCard.svg).digest('hex'),
+  imageHash: crypto.createHash('sha256').update(textCard.png).digest('hex'),
+};
+const readCard = (file) => {
+  assert.equal(file, 'card.svg');
+  return textCard.svg;
+};
+const checkCard = (
+  panel = textPanel,
+  record = textRecord,
+  image = textCard.png,
+  read = readCard,
+) =>
+  validateTextCardEvidence(
+    panel,
+    { caption: { kind: 'caption' }, actor: {} },
+    record,
+    image,
+    read,
+  );
+checkCard();
+assert.throws(() => whiteTextCard(0, 16));
+assert.throws(() => whiteTextCard(32, 1537));
+assert.throws(() =>
+  checkCard({ ...textPanel, speakers: { actor: { kind: 'head' } } }),
+);
+assert.throws(() =>
+  checkCard({ ...textPanel, dialogue: [{ speaker: 'actor' }] }),
+);
+assert.throws(() => checkCard({ ...textPanel, protected: [[0, 0, 2, 2]] }));
+assert.throws(() =>
+  checkCard({ ...textPanel, production: { hands: { actor: {} }, props: [] } }),
+);
+assert.throws(() =>
+  checkCard({
+    ...textPanel,
+    production: { hands: {}, props: [{ id: 'coin' }] },
+  }),
+);
+assert.throws(() =>
+  checkCard(textPanel, { ...textRecord, renderer: 'Codex built-in image_gen' }),
+);
+assert.throws(() =>
+  checkCard(textPanel, {
+    ...textRecord,
+    prompt: 'Pretend an image model made this',
+  }),
+);
+assert.throws(() =>
+  checkCard(textPanel, textRecord, textCard.png, () =>
+    textCard.svg.replace('white', 'black'),
+  ),
+);
+const brokenCard = Buffer.from(textCard.png);
+brokenCard[42] ^= 1;
+assert.throws(() =>
+  checkCard(
+    textPanel,
+    {
+      ...textRecord,
+      imageHash: crypto.createHash('sha256').update(brokenCard).digest('hex'),
+    },
+    brokenCard,
+  ),
+);
+const repackCard = (change, level) => {
+  const pixels = inflateSync(
+    textCard.png.subarray(41, 41 + textCard.png.readUInt32BE(33)),
+  );
+  change(pixels);
+  const compressed = deflateSync(pixels, { level }),
+    body = Buffer.concat([Buffer.from('IDAT'), compressed]),
+    size = Buffer.alloc(4),
+    crc = Buffer.alloc(4);
+  size.writeUInt32BE(compressed.length);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([
+    textCard.png.subarray(0, 33),
+    size,
+    body,
+    crc,
+    textCard.png.subarray(-12),
+  ]);
+};
+const recompressed = repackCard(() => {}, 0);
+checkCard(
+  textPanel,
+  {
+    ...textRecord,
+    imageHash: crypto.createHash('sha256').update(recompressed).digest('hex'),
+  },
+  recompressed,
+);
+const coloredCard = repackCard((pixels) => (pixels[1] = 0), 6);
+assert.throws(
+  () =>
+    checkCard(
+      textPanel,
+      {
+        ...textRecord,
+        imageHash: crypto
+          .createHash('sha256')
+          .update(coloredCard)
+          .digest('hex'),
+      },
+      coloredCard,
+    ),
+  /opaque white/,
+);
 const temporary = createTemporary('test');
 const fixture = temporary.folder;
 try {
@@ -25,6 +156,9 @@ try {
     'src/cli-output.mjs',
     'src/first-reading.mjs',
     'src/production-preflight.mjs',
+    'src/artwork-crop.mjs',
+    'src/text-card.mjs',
+    'src/generation-edits.mjs',
     'src/lettering.mjs',
     'src/workspace.mjs',
     'src/runtime-files.mjs',

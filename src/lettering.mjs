@@ -154,7 +154,35 @@ export function createLettering(cast) {
   const caption = (id) => cast[id]?.kind === 'caption';
   function tailGeometry(panel, d) {
     const speaker = panel.speakers?.[d.speaker];
-    if (caption(d.speaker) || speaker?.kind === 'offscreen') return null;
+    if (speaker?.offscreenEdge !== undefined)
+      assert.ok(
+        speaker.kind === 'offscreen' &&
+          !caption(d.speaker) &&
+          ['left', 'right'].includes(speaker.offscreenEdge) &&
+          speaker.anchor === undefined &&
+          speaker.face === undefined,
+        'offscreenEdge requires an offscreen voice without a face or mouth anchor',
+      );
+    if (caption(d.speaker)) return null;
+    if (speaker?.kind === 'offscreen') {
+      if (speaker.offscreenEdge === undefined) return null;
+      const [x, y, w, h] = box(panel, d);
+      const direction = speaker.offscreenEdge === 'left' ? -1 : 1;
+      const bx = direction < 0 ? x : x + w;
+      const by = y + h / 2;
+      const tx = panel.rect[0] + (direction < 0 ? 6 : panel.rect[2] - 6);
+      const reach = (tx - bx) * direction;
+      assert.ok(
+        reach >= 8 && reach <= (d.tailLength ?? 160),
+        'Place offscreen balloon near its declared panel edge: ' + panel.id,
+      );
+      return {
+        base: [bx, by],
+        tip: [tx, by],
+        a: [bx - direction * 4, by - 7],
+        b: [bx - direction * 4, by + 7],
+      };
+    }
     assert.ok(
       speaker?.anchor,
       'Missing speaker anchor: ' + panel.id + '/' + d.speaker,

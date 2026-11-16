@@ -46,10 +46,31 @@ export function firstReadingRequest(root, c, stage, target = 'all') {
       fs.existsSync(resolve(root, file)),
       'Export current unnumbered reading image: ' + file,
     );
+    const pngHash = hash(fs.readFileSync(resolve(root, file)));
+    // Older exports lack receipts; newly exported PNGs must match their SVG.
+    const receiptFile = resolve(root, file + '.render.json');
+    if (fs.existsSync(receiptFile)) {
+      const receipt = JSON.parse(fs.readFileSync(receiptFile, 'utf8'));
+      assert.equal(
+        receipt.scale,
+        1,
+        'First reading requires the full-size export',
+      );
+      assert.equal(
+        receipt.pngHash,
+        pngHash,
+        'PNG changed after export; export again: ' + file,
+      );
+      assert.equal(
+        receipt.svgHash,
+        hash(fs.readFileSync(resolve(root, file.replace(/\.png$/, '.svg')))),
+        'PNG is from an older SVG; export again: ' + file,
+      );
+    }
     return {
       page: page.id,
       file,
-      hash: hash(fs.readFileSync(resolve(root, file))),
+      hash: pngHash,
     };
   });
   // Bind to the current plan without supplying its script or intended order.

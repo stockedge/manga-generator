@@ -28,6 +28,39 @@ assert.throws(
 );
 const cast = { a: {}, n: { kind: 'caption' } },
   page = { section: 'shop' };
+const offscreenLettering = createLettering(cast);
+const offscreenPanel = {
+  id: 'offscreen-fixture',
+  rect: [24, 24, 300, 400],
+  speakers: { a: { kind: 'offscreen', offscreenEdge: 'right' } },
+};
+const offscreenSpeech = { speaker: 'a', text: 'はい', side: 'right', dy: 18 };
+assert.deepEqual(
+  offscreenLettering.tailGeometry(offscreenPanel, offscreenSpeech).tip,
+  [318, 90],
+);
+offscreenPanel.speakers.a.offscreenEdge = 'left';
+assert.deepEqual(
+  offscreenLettering.tailGeometry(offscreenPanel, {
+    ...offscreenSpeech,
+    side: 'left',
+  }).tip,
+  [30, 90],
+);
+assert.throws(
+  () => offscreenLettering.tailGeometry(offscreenPanel, offscreenSpeech),
+  /near its declared panel edge/,
+);
+offscreenPanel.speakers.a.offscreenEdge = 'top';
+assert.throws(
+  () => offscreenLettering.tailGeometry(offscreenPanel, offscreenSpeech),
+  /offscreenEdge/,
+);
+delete offscreenPanel.speakers.a.offscreenEdge;
+assert.equal(
+  offscreenLettering.tailGeometry(offscreenPanel, offscreenSpeech),
+  null,
+);
 const config = {
   cast,
   sections: {

@@ -140,6 +140,10 @@ export function reviewInputs(c, configFile, stage, target = 'all') {
     }
     if (stage === 'script') files.push(c.workflowDir + '/source-coverage.json');
     if (['storyboard', 'artwork', 'lettering', 'final'].includes(stage)) {
+      for (const page of [...pages, ...(base.boundaryContext || [])])
+        for (const panel of page.panels)
+          if (panel.storyboardImage !== undefined)
+            files.push(panel.storyboardImage);
       files.push(...(c.references || []));
       for (const page of pages) {
         files.push(c.workflowDir + '/storyboards/page-' + page.id + '.svg');
